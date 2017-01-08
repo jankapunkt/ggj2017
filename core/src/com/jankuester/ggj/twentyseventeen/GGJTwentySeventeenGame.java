@@ -2,6 +2,7 @@ package com.jankuester.ggj.twentyseventeen;
 
 import java.util.HashMap;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -13,8 +14,8 @@ import com.jankuester.ggj.twentyseventeen.screens.GameScreen;
 import com.jankuester.ggj.twentyseventeen.screens.Optionsscreen;
 import com.jankuester.ggj.twentyseventeen.screens.StartScreen;
 import com.jankuester.ggj.twentyseventeen.screens.actions.ScreenMenuActions;
-import com.jankuester.ggj.twentyseventeen.screens.components.GameMenuTextButton;
-import com.jankuester.ggj.twentyseventeen.screens.components.ButtonFactory;
+import com.jankuester.ggj.twentyseventeen.screens.components.ScreenMenuTextButton;
+import com.jankuester.ggj.twentyseventeen.screens.components.ScreenComponentFactory;
 
 
 public class GGJTwentySeventeenGame extends Game {
@@ -38,10 +39,14 @@ public class GGJTwentySeventeenGame extends Game {
 	createOptionsScreen();
 	setScreen(startScreen);
     }
-
+    
     private void loadGlobalSettings() {
+	Gdx.graphics.setVSync(true);
+	Gdx.graphics.setResizable(true);
+	
+	
 	menuListener = new MenuListener(this);
-	ButtonFactory.init();
+	ScreenComponentFactory.init();
 	initSystemSounds();
     }
 
@@ -56,17 +61,20 @@ public class GGJTwentySeventeenGame extends Game {
     public void createStartScreen() {
 	startScreen = new StartScreen();
 	startScreen.addInputListener(menuListener);
-	startScreen.addButton(ButtonFactory.createMenuButton(ScreenMenuActions.GAME, "START GAME", Color.GREEN));
-	startScreen.addButton(ButtonFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", Color.BLACK));
+	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.GAME, "START GAME", Color.GREEN));
+	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", Color.BLACK));
+	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.EXIT, "EXIT", Color.BLACK));
 	startScreen.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     public void createOptionsScreen() {
 	optionsSreen = new Optionsscreen();
 	optionsSreen.addInputListener(menuListener);
-	optionsSreen.addButton(ButtonFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
+	optionsSreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
 	optionsSreen.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
+    
+
     
     private void startGame() {
 	GameScreen gameScreen = new GameScreen();
@@ -104,6 +112,9 @@ public class GGJTwentySeventeenGame extends Game {
 	case ScreenMenuActions.GAME:
 	    startGame();
 	    break;
+	case ScreenMenuActions.EXIT:
+	    Gdx.app.exit();
+	    break;
 	case ScreenMenuActions.NULL:
 	default:
 	    break;
@@ -133,8 +144,8 @@ public class GGJTwentySeventeenGame extends Game {
 
 	@Override
 	public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
-	    if (event.getListenerActor() instanceof GameMenuTextButton) {
-		GameMenuTextButton target = (GameMenuTextButton) event.getListenerActor();
+	    if (event.getListenerActor() instanceof ScreenMenuTextButton) {
+		ScreenMenuTextButton target = (ScreenMenuTextButton) event.getListenerActor();
 		game.onMenuAction(target.getAction());
 	    } else {
 		lastMenuHover = -1;
@@ -144,8 +155,8 @@ public class GGJTwentySeventeenGame extends Game {
 
 	@Override
 	public boolean mouseMoved(InputEvent event, float x, float y) {
-	    if (event.getListenerActor() instanceof GameMenuTextButton) {
-		GameMenuTextButton target = (GameMenuTextButton) event.getListenerActor();
+	    if (event.getListenerActor() instanceof ScreenMenuTextButton) {
+		ScreenMenuTextButton target = (ScreenMenuTextButton) event.getListenerActor();
 		game.onMenuHover(target.getAction());
 	    } else {
 

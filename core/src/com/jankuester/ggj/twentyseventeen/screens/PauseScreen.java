@@ -1,13 +1,10 @@
 package com.jankuester.ggj.twentyseventeen.screens;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
-public class PauseScreen extends BaseScreen {
+public class PauseScreen extends ScreenBase {
 
     private TextureRegion background;
 
@@ -31,7 +28,7 @@ public class PauseScreen extends BaseScreen {
 	//stage.act();
 	//batch.setProjectionMatrix(camera.combined);
 	batch.begin();
-	batch.draw(background, 0, 0, _width, _height);
+	batch.draw(background, 0, 0, width, height);
 	//stage.draw();
 	batch.end();
     }
@@ -71,11 +68,11 @@ public class PauseScreen extends BaseScreen {
     }
 
     public void setHeight(int screenHeight) {
-	this._height = screenHeight;
+	this.height = screenHeight;
     }
 
     public void setWidth(int screenWidth) {
-	this._width = screenWidth;
+	this.width = screenWidth;
     }
 
 }
