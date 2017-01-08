@@ -2,27 +2,27 @@ package com.jankuester.ggj.twentyseventeen;
 
 import java.util.HashMap;
 
-import com.badlogic.gdx.Application;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.jankuester.ggj.twentyseventeen.screens.GameScreen;
 import com.jankuester.ggj.twentyseventeen.screens.Optionsscreen;
 import com.jankuester.ggj.twentyseventeen.screens.StartScreen;
 import com.jankuester.ggj.twentyseventeen.screens.actions.ScreenMenuActions;
-import com.jankuester.ggj.twentyseventeen.screens.components.ScreenMenuTextButton;
 import com.jankuester.ggj.twentyseventeen.screens.components.ScreenComponentFactory;
-
+import com.jankuester.ggj.twentyseventeen.screens.components.ScreenMenuTextButton;
 
 public class GGJTwentySeventeenGame extends Game {
 
     private StartScreen startScreen;
     private Optionsscreen optionsSreen;
-    
+
     private MenuListener menuListener;
     private HashMap<String, Music> systemSounds;
 
@@ -39,12 +39,11 @@ public class GGJTwentySeventeenGame extends Game {
 	createOptionsScreen();
 	setScreen(startScreen);
     }
-    
+
     private void loadGlobalSettings() {
 	Gdx.graphics.setVSync(true);
 	Gdx.graphics.setResizable(true);
-	
-	
+
 	menuListener = new MenuListener(this);
 	ScreenComponentFactory.init();
 	initSystemSounds();
@@ -60,9 +59,14 @@ public class GGJTwentySeventeenGame extends Game {
 
     public void createStartScreen() {
 	startScreen = new StartScreen();
+	Texture startBg = new Texture(Gdx.files.internal("assets/images/bg_space.jpg"));
+	startScreen.setBackground(startBg, false);
 	startScreen.addInputListener(menuListener);
-	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.GAME, "START GAME", Color.GREEN));
-	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", Color.BLACK));
+	startScreen.addText(ScreenComponentFactory.createLabel("GLOBAL GAME JAM 2017"));
+	startScreen
+		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.GAME, "START GAME", Color.GREEN));
+	startScreen
+		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", Color.BLACK));
 	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.EXIT, "EXIT", Color.BLACK));
 	startScreen.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
@@ -70,27 +74,25 @@ public class GGJTwentySeventeenGame extends Game {
     public void createOptionsScreen() {
 	optionsSreen = new Optionsscreen();
 	optionsSreen.addInputListener(menuListener);
-	optionsSreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
+	optionsSreen.addButton(
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
 	optionsSreen.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
-    
 
-    
     private void startGame() {
 	GameScreen gameScreen = new GameScreen();
 	gameScreen.addInputListener(menuListener);
 	setScreen(gameScreen);
     }
-    
+
     // ====================================================================
     //
     // MENU ACTIONS
     //
     // ====================================================================
 
-    private int lastMenuAction = -1;    
+    private int lastMenuAction = -1;
     private int lastMenuHover = -1;
-
 
     public void onMenuAction(int action) {
 

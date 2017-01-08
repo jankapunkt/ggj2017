@@ -11,7 +11,7 @@ public class PauseScreen extends ScreenBase {
     public PauseScreen() {
 	// TODO Auto-generated constructor stub
     }
-    
+
     public void create() {
 	super.create();
     }
@@ -23,13 +23,13 @@ public class PauseScreen extends ScreenBase {
 
     @Override
     public void render(float delta) {
-	//Gdx.gl.glClearColor(1, 1, 1, 1);
-	//Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-	//stage.act();
-	//batch.setProjectionMatrix(camera.combined);
+	// Gdx.gl.glClearColor(1, 1, 1, 1);
+	// Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+	// stage.act();
+	// batch.setProjectionMatrix(camera.combined);
 	batch.begin();
 	batch.draw(background, 0, 0, width, height);
-	//stage.draw();
+	// stage.draw();
 	batch.end();
     }
 
@@ -58,13 +58,6 @@ public class PauseScreen extends ScreenBase {
 	if (background != null && background.getTexture() != null)
 	    background.getTexture().dispose();
 	super.dispose();
-    }
-
-    public void setBackgroundImage(Texture screenBuffer) {
-	screenBuffer.setFilter(TextureFilter.Linear, TextureFilter.Linear);
-	TextureRegion region = new TextureRegion(screenBuffer);
-	region.flip(false, true);
-	this.background = region;
     }
 
     public void setHeight(int screenHeight) {
