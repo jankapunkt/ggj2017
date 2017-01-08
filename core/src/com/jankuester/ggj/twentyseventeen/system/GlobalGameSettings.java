@@ -1,7 +1,5 @@
 package com.jankuester.ggj.twentyseventeen.system;
 
-import com.badlogic.gdx.Gdx;
-
 public class GlobalGameSettings {
     
     //graphics fallback values

@@ -1,7 +1,5 @@
 package com.jankuester.ggj.twentyseventeen.screens;
 
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class PauseScreen extends ScreenBase {
@@ -27,10 +25,10 @@ public class PauseScreen extends ScreenBase {
 	// Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 	// stage.act();
 	// batch.setProjectionMatrix(camera.combined);
-	batch.begin();
-	batch.draw(background, 0, 0, width, height);
+	spriteBatch.begin();
+	spriteBatch.draw(background, 0, 0, width, height);
 	// stage.draw();
-	batch.end();
+	spriteBatch.end();
     }
 
     @Override

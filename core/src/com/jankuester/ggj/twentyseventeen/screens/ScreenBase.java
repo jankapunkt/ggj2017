@@ -19,6 +19,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
+import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jankuester.ggj.twentyseventeen.GGJTwentySeventeenGame;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
@@ -32,14 +34,16 @@ public class ScreenBase implements Screen {
     protected int height = GlobalGameSettings.resolutionY;
 
     protected TextureRegion background;
-    
+
     protected Table menuTable;
     protected Stage stage;
     protected OrthographicCamera camera;
-    protected SpriteBatch batch;
+    protected SpriteBatch spriteBatch;
 
     protected ArrayList<Actor> uiElements;
     protected ArrayList<InputListener> listeners;
+
+    private Viewport viewport;
 
     public ScreenBase() {
 	uiElements = new ArrayList<Actor>();
@@ -47,12 +51,13 @@ public class ScreenBase implements Screen {
     }
 
     public void create() {
+		
 	camera = new OrthographicCamera();
 	camera.setToOrtho(false, width, height); // ** w/h ratio = 1.66 **//
-	batch = new SpriteBatch();
+	spriteBatch = new SpriteBatch();
 	resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-	stage = new Stage();
+	stage = new Stage(new ExtendViewport(1280,768));
 	stage.clear();
 	Gdx.input.setInputProcessor(stage); // ** stage is responsive **//
 
@@ -82,16 +87,22 @@ public class ScreenBase implements Screen {
 	Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 	stage.act();
 
-	batch.setProjectionMatrix(camera.combined);
-	batch.begin();
+	if (this.background != null) {
+	    spriteBatch.begin();
+	    spriteBatch.draw(background, 0, 0, width, height);
+	    spriteBatch.end();
+	}
+
+	spriteBatch.setProjectionMatrix(camera.combined);
+	spriteBatch.begin();
 	stage.draw();
-	batch.end();
+	spriteBatch.end();
 
     }
 
     @Override
     public void resize(int width, int height) {
-
+	//http://acamara.es/blog/2012/02/keep-screen-aspect-ratio-with-different-resolutions-using-libgdx/
 	Vector2 size = Scaling.fit.apply(800, 480, width, height);
 	int viewportX = (int) (width - size.x) / 2;
 	int viewportY = (int) (height - size.y) / 2;
@@ -134,7 +145,7 @@ public class ScreenBase implements Screen {
     public void addInputListener(InputListener listener) {
 	listeners.add(listener);
     }
-    
+
     public void addText(Label text) {
 	this.addUiElement(text);
     }
@@ -142,11 +153,11 @@ public class ScreenBase implements Screen {
     public void addButton(TextButton tb) {
 	this.addUiElement(tb);
     }
-    
+
     public void addUiElement(Actor element) {
 	uiElements.add(element);
     }
-    
+
     public void setBackground(Texture background, boolean fromBuffer) {
 	if (fromBuffer) {
 	    background.setFilter(TextureFilter.Linear, TextureFilter.Linear);

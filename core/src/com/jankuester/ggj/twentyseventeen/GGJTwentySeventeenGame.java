@@ -5,7 +5,6 @@ import java.util.HashMap;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
@@ -59,7 +58,7 @@ public class GGJTwentySeventeenGame extends Game {
 
     public void createStartScreen() {
 	startScreen = new StartScreen();
-	Texture startBg = new Texture(Gdx.files.internal("assets/images/bg_space.jpg"));
+	Texture startBg = new Texture(Gdx.files.internal("images/bg_space.jpg"));
 	startScreen.setBackground(startBg, false);
 	startScreen.addInputListener(menuListener);
 	startScreen.addText(ScreenComponentFactory.createLabel("GLOBAL GAME JAM 2017"));
