@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -20,11 +21,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jankuester.ggj.twentyseventeen.GGJTwentySeventeenGame;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
-import com.sun.prism.image.ViewPort;
 
 public class ScreenBase implements Screen {
 
@@ -33,7 +32,7 @@ public class ScreenBase implements Screen {
     protected int width = GlobalGameSettings.resolutionX;
     protected int height = GlobalGameSettings.resolutionY;
 
-    protected TextureRegion background;
+    protected TextureRegion backgroundImage;
 
     protected Table menuTable;
     protected Stage stage;
@@ -43,7 +42,7 @@ public class ScreenBase implements Screen {
     protected ArrayList<Actor> uiElements;
     protected ArrayList<InputListener> listeners;
 
-    private Viewport viewport;
+    private Music backgroundMusic;
 
     public ScreenBase() {
 	uiElements = new ArrayList<Actor>();
@@ -51,13 +50,13 @@ public class ScreenBase implements Screen {
     }
 
     public void create() {
-		
+
 	camera = new OrthographicCamera();
 	camera.setToOrtho(false, width, height); // ** w/h ratio = 1.66 **//
 	spriteBatch = new SpriteBatch();
 	resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
-	stage = new Stage(new ExtendViewport(1280,768));
+	stage = new Stage(new ExtendViewport(1280, 768));
 	stage.clear();
 	Gdx.input.setInputProcessor(stage); // ** stage is responsive **//
 
@@ -74,6 +73,12 @@ public class ScreenBase implements Screen {
 	menuTable.align(Align.center);
 	menuTable.setPosition(this.width / 2, this.height / 2);
 	stage.addActor(menuTable);
+
+	if (backgroundMusic != null) {
+	    backgroundMusic.setLooping(true);
+	    backgroundMusic.setVolume(GlobalGameSettings.loudeness_music);
+	    backgroundMusic.play();
+	}
     }
 
     @Override
@@ -87,9 +92,9 @@ public class ScreenBase implements Screen {
 	Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 	stage.act();
 
-	if (this.background != null) {
+	if (this.backgroundImage != null) {
 	    spriteBatch.begin();
-	    spriteBatch.draw(background, 0, 0, width, height);
+	    spriteBatch.draw(backgroundImage, 0, 0, width, height);
 	    spriteBatch.end();
 	}
 
@@ -102,7 +107,7 @@ public class ScreenBase implements Screen {
 
     @Override
     public void resize(int width, int height) {
-	//http://acamara.es/blog/2012/02/keep-screen-aspect-ratio-with-different-resolutions-using-libgdx/
+	// http://acamara.es/blog/2012/02/keep-screen-aspect-ratio-with-different-resolutions-using-libgdx/
 	Vector2 size = Scaling.fit.apply(800, 480, width, height);
 	int viewportX = (int) (width - size.x) / 2;
 	int viewportY = (int) (height - size.y) / 2;
@@ -158,14 +163,19 @@ public class ScreenBase implements Screen {
 	uiElements.add(element);
     }
 
-    public void setBackground(Texture background, boolean fromBuffer) {
+    public void setBackgroundImage(Texture background, boolean fromBuffer) {
 	if (fromBuffer) {
 	    background.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 	    TextureRegion region = new TextureRegion(background);
 	    region.flip(false, true);
-	    this.background = region;
+	    this.backgroundImage = region;
 	} else {
-	    this.background = new TextureRegion(background);
+	    this.backgroundImage = new TextureRegion(background);
 	}
     }
+
+    public void setBackgroundAudio(Music audio) {
+	this.backgroundMusic = audio;
+    }
+
 }

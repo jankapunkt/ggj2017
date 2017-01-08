@@ -5,7 +5,7 @@ import java.util.HashMap;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
@@ -23,7 +23,7 @@ public class GGJTwentySeventeenGame extends Game {
     private Optionsscreen optionsSreen;
 
     private MenuListener menuListener;
-    private HashMap<String, Music> systemSounds;
+    private HashMap<String, Sound> systemSounds;
 
     // ====================================================================
     //
@@ -49,17 +49,18 @@ public class GGJTwentySeventeenGame extends Game {
     }
 
     private void initSystemSounds() {
-	systemSounds = new HashMap<String, Music>();
-	systemSounds.put("menuAction", Gdx.audio.newMusic(Gdx.files.internal("audio/menu/enter.mp3")));
-	systemSounds.put("menuBack", Gdx.audio.newMusic(Gdx.files.internal("audio/menu/back.mp3")));
-	systemSounds.put("menuForbidden", Gdx.audio.newMusic(Gdx.files.internal("audio/menu/forbidden.mp3")));
-	systemSounds.put("menuHover", Gdx.audio.newMusic(Gdx.files.internal("audio/menu/hover.mp3")));
+	systemSounds = new HashMap<String, Sound>();
+	systemSounds.put("menuAction", Gdx.audio.newSound(Gdx.files.internal("audio/menu/enter.mp3")));
+	systemSounds.put("menuBack", Gdx.audio.newSound(Gdx.files.internal("audio/menu/back.mp3")));
+	systemSounds.put("menuForbidden", Gdx.audio.newSound(Gdx.files.internal("audio/menu/forbidden.mp3")));
+	systemSounds.put("menuHover", Gdx.audio.newSound(Gdx.files.internal("audio/menu/hover.mp3")));
     }
 
     public void createStartScreen() {
 	startScreen = new StartScreen();
 	Texture startBg = new Texture(Gdx.files.internal("images/bg_space.jpg"));
-	startScreen.setBackground(startBg, false);
+	startScreen.setBackgroundImage(startBg, false);
+	startScreen.setBackgroundAudio(Gdx.audio.newMusic(Gdx.files.internal("audio/menu/bg_main.mp3")));
 	startScreen.addInputListener(menuListener);
 	startScreen.addText(ScreenComponentFactory.createLabel("GLOBAL GAME JAM 2017"));
 	startScreen
