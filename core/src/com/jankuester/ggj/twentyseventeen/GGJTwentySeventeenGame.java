@@ -10,8 +10,10 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.jankuester.ggj.twentyseventeen.models.utils.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.screens.GameScreen;
 import com.jankuester.ggj.twentyseventeen.screens.Optionsscreen;
+import com.jankuester.ggj.twentyseventeen.screens.PreviewScreen;
 import com.jankuester.ggj.twentyseventeen.screens.StartScreen;
 import com.jankuester.ggj.twentyseventeen.screens.actions.ScreenMenuActions;
 import com.jankuester.ggj.twentyseventeen.screens.components.ScreenComponentFactory;
@@ -24,6 +26,7 @@ public class GGJTwentySeventeenGame extends Game {
 
     private MenuListener menuListener;
     private HashMap<String, Sound> systemSounds;
+    private PreviewScreen previewScreen;
 
     // ====================================================================
     //
@@ -63,8 +66,8 @@ public class GGJTwentySeventeenGame extends Game {
 	startScreen.setBackgroundAudio(Gdx.audio.newMusic(Gdx.files.internal("audio/menu/bg_main.mp3")));
 	startScreen.addInputListener(menuListener);
 	startScreen.addText(ScreenComponentFactory.createLabel("GLOBAL GAME JAM 2017"));
-	startScreen
-		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.GAME, "START GAME", Color.GREEN));
+	startScreen.addButton(
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "New Race", Color.GREEN));
 	startScreen
 		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", Color.BLACK));
 	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.EXIT, "EXIT", Color.BLACK));
@@ -77,6 +80,26 @@ public class GGJTwentySeventeenGame extends Game {
 	optionsSreen.addButton(
 		ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
 	optionsSreen.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
+
+    private void previewMaps() {
+	if (previewScreen == null) {
+	    initPreviewScreen();
+	}
+	setScreen(previewScreen);
+    }
+
+    private void initPreviewScreen() {
+	previewScreen = new PreviewScreen();
+	previewScreen.addInputListener(menuListener);
+	previewScreen.addButton(
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
+	previewScreen
+		.addPreviewModel(ModelFactory.getGameModelInstance("models/maps/previews/preview_city.g3db", 0, 0, 0));
+    }
+
+    private void previewVehicles() {
+
     }
 
     private void startGame() {
@@ -110,6 +133,12 @@ public class GGJTwentySeventeenGame extends Game {
 	    break;
 	case ScreenMenuActions.OPTIONS:
 	    setScreen(optionsSreen);
+	    break;
+	case ScreenMenuActions.PREVIEW_MAPS:
+	    previewMaps();
+	    break;
+	case ScreenMenuActions.PREVIEW_VEHICLES:
+	    previewVehicles();
 	    break;
 	case ScreenMenuActions.GAME:
 	    startGame();

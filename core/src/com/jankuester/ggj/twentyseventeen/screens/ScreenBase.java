@@ -21,7 +21,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.jankuester.ggj.twentyseventeen.GGJTwentySeventeenGame;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
@@ -43,6 +42,10 @@ public class ScreenBase implements Screen {
     protected ArrayList<InputListener> listeners;
 
     private Music backgroundMusic;
+
+    private Texture backgroundRef;
+
+    private boolean paused;
 
     public ScreenBase() {
 	uiElements = new ArrayList<Actor>();
@@ -125,14 +128,12 @@ public class ScreenBase implements Screen {
 
     @Override
     public void pause() {
-	// TODO Auto-generated method stub
-
+	this.paused = true;
     }
 
     @Override
     public void resume() {
-	// TODO Auto-generated method stub
-
+	this.paused = false;
     }
 
     @Override
@@ -143,8 +144,17 @@ public class ScreenBase implements Screen {
 
     @Override
     public void dispose() {
-	// TODO Auto-generated method stub
-
+	listeners.clear();
+	menuTable.clear();
+	uiElements.clear();
+	spriteBatch.dispose();
+	stage.dispose();
+	backgroundMusic.dispose();
+	backgroundImage.getTexture().dispose();
+    }
+    
+    public void setMenuPosition() {
+	//TODO implement to align menutable to the bottom or top or left or right
     }
 
     public void addInputListener(InputListener listener) {
@@ -164,6 +174,8 @@ public class ScreenBase implements Screen {
     }
 
     public void setBackgroundImage(Texture background, boolean fromBuffer) {
+	if (backgroundImage != null)
+	    backgroundImage.getTexture().dispose();
 	if (fromBuffer) {
 	    background.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 	    TextureRegion region = new TextureRegion(background);
