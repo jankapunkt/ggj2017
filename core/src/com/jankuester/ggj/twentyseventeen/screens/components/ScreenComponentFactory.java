@@ -4,9 +4,13 @@ import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.badlogic.gdx.graphics.Pixmap.Format;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -15,20 +19,19 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 public class ScreenComponentFactory {
     private static final BitmapFont defaultFont = new BitmapFont();
     private static final ArrayList<BitmapFont> fonts = new ArrayList<BitmapFont>();
-    
-    
+
     private static final TextButtonStyle defaultTextButtonStyle = new TextButtonStyle();
     private static final LabelStyle defaultLabelStyle = new LabelStyle();
 
-    
     private static boolean initiated = false;
 
     public static void init() {
 
-	//fonts.add(createFont("assets/fonts/XOLONIUM-REGULAR.OTF", Color.BLACK, Color.BLACK, Color.WHITE, 32));
-	
+	// fonts.add(createFont("assets/fonts/XOLONIUM-REGULAR.OTF",
+	// Color.BLACK, Color.BLACK, Color.WHITE, 32));
+
 	defaultFont.setColor(Color.BLACK);
-	
+
 	defaultTextButtonStyle.font = defaultFont;
 	defaultTextButtonStyle.overFontColor = Color.ORANGE;
 	defaultTextButtonStyle.fontColor = Color.BLACK;
@@ -38,9 +41,10 @@ public class ScreenComponentFactory {
 
 	initiated = true;
     }
-    
-    public static BitmapFont createFont(String fontFilePath, Color fontColor, Color borderColor, Color shadowColor, int size) {
-	FreeTypeFontGenerator generator = new FreeTypeFontGenerator( Gdx.files.internal(fontFilePath));
+
+    public static BitmapFont createFont(String fontFilePath, Color fontColor, Color borderColor, Color shadowColor,
+	    int size) {
+	FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(fontFilePath));
 	FreeTypeFontParameter parameter15 = new FreeTypeFontParameter();
 	parameter15.color = fontColor;
 	parameter15.size = size;
@@ -48,8 +52,17 @@ public class ScreenComponentFactory {
 	parameter15.shadowColor = shadowColor;
 	BitmapFont font = generator.generateFont(parameter15);
 	generator.dispose();
-	
+
 	return font;
+    }
+
+    public static Label setLabelbackground(Label label, Color color) {
+	color.a = 0.6f;
+	Pixmap labelColor = new Pixmap((int) label.getWidth(), (int) label.getHeight(), Format.RGBA8888);
+	labelColor.setColor(color);
+	labelColor.fill();
+	label.getStyle().background = new Image(new Texture(labelColor)).getDrawable();
+	return label;
     }
 
     public static TextButtonStyle defaultTextButtonStyle() {
@@ -63,7 +76,7 @@ public class ScreenComponentFactory {
 	    init();
 	return defaultLabelStyle;
     }
-    
+
     public static LabelStyle customLabelStyle(BitmapFont font, Color fontColor) {
 	if (!initiated)
 	    init();
@@ -74,7 +87,7 @@ public class ScreenComponentFactory {
     public static Label createLabel(String text) {
 	return createLabel(text, defaultLabelStyle());
     }
-    
+
     public static Label createLabel(String text, Color fontColor, float size) {
 	Label l = createLabel(text, defaultLabelStyle());
 	l.setColor(fontColor);
@@ -86,6 +99,7 @@ public class ScreenComponentFactory {
 	if (!initiated)
 	    init();
 	Label label = new Label(text, style);
+	label = setLabelbackground(label, Color.DARK_GRAY);
 	return label;
     }
 

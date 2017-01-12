@@ -109,7 +109,6 @@ public class GGJTwentySeventeenGame extends Game {
 		ModelFactory.getGameModelInstance("models/maps/previews/preview_city.g3db", 0, 0, 0));
 	previewScreen.addPreviewModel(cityMapPreview);
 	
-	previewScreen.getMenuTable().setBackground();
     }
 
     private void previewVehicles() {
