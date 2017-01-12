@@ -8,7 +8,7 @@ import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 public class DesktopLauncher {
     public static void main(String[] arg) {
 	LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-	config.fullscreen = true;
+	// config.fullscreen = true;
 	config.resizable = true;
 	config.width = GlobalGameSettings.resolutionX;
 	config.height = GlobalGameSettings.resolutionY;

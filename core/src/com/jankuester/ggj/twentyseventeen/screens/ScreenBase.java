@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.Texture.TextureFilter;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
@@ -37,7 +38,8 @@ public class ScreenBase implements Screen {
     protected Stage stage;
     protected OrthographicCamera camera;
     protected SpriteBatch spriteBatch;
-
+    protected BitmapFont font;
+    
     protected ArrayList<Actor> uiElements;
     protected ArrayList<InputListener> listeners;
 
@@ -83,7 +85,7 @@ public class ScreenBase implements Screen {
 	    backgroundMusic.play();
 	}
     }
-
+    
     @Override
     public void show() {
 	create();
@@ -101,11 +103,12 @@ public class ScreenBase implements Screen {
 	    spriteBatch.end();
 	}
 
-	spriteBatch.setProjectionMatrix(camera.combined);
-	spriteBatch.begin();
-	stage.draw();
-	spriteBatch.end();
-
+	if (this.uiElements.size() > 0) {
+	    spriteBatch.setProjectionMatrix(camera.combined);
+	    spriteBatch.begin();
+	    stage.draw();
+	    spriteBatch.end();
+	}
     }
 
     @Override
@@ -153,9 +156,10 @@ public class ScreenBase implements Screen {
 	backgroundImage.getTexture().dispose();
     }
     
-    public void setMenuPosition() {
-	//TODO implement to align menutable to the bottom or top or left or right
+    public Table getMenuTable() {
+	return menuTable;
     }
+    
 
     public void addInputListener(InputListener listener) {
 	listeners.add(listener);

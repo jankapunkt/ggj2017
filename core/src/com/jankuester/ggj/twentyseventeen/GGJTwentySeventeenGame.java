@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelFactory;
+import com.jankuester.ggj.twentyseventeen.models.utils.ModelPreview;
 import com.jankuester.ggj.twentyseventeen.screens.GameScreen;
 import com.jankuester.ggj.twentyseventeen.screens.Optionsscreen;
 import com.jankuester.ggj.twentyseventeen.screens.PreviewScreen;
@@ -18,6 +19,7 @@ import com.jankuester.ggj.twentyseventeen.screens.StartScreen;
 import com.jankuester.ggj.twentyseventeen.screens.actions.ScreenMenuActions;
 import com.jankuester.ggj.twentyseventeen.screens.components.ScreenComponentFactory;
 import com.jankuester.ggj.twentyseventeen.screens.components.ScreenMenuTextButton;
+import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
 public class GGJTwentySeventeenGame extends Game {
 
@@ -67,7 +69,7 @@ public class GGJTwentySeventeenGame extends Game {
 	startScreen.addInputListener(menuListener);
 	startScreen.addText(ScreenComponentFactory.createLabel("GLOBAL GAME JAM 2017"));
 	startScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "New Race", Color.GREEN));
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "ARCADE MODE", Color.GREEN));
 	startScreen
 		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", Color.BLACK));
 	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.EXIT, "EXIT", Color.BLACK));
@@ -91,11 +93,23 @@ public class GGJTwentySeventeenGame extends Game {
 
     private void initPreviewScreen() {
 	previewScreen = new PreviewScreen();
+	Texture background = new Texture(Gdx.files.internal("images/bg_space.jpg"));
+	previewScreen.setBackgroundImage(background, false);
 	previewScreen.addInputListener(menuListener);
 	previewScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_VEHICLES, "SELECT", Color.BLACK));
 	previewScreen
-		.addPreviewModel(ModelFactory.getGameModelInstance("models/maps/previews/preview_city.g3db", 0, 0, 0));
+		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.NEXT_MAP, "NEXT", Color.BLACK));
+	previewScreen.addButton(
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIOUS_MAP, "PREVIOUS", Color.BLACK));
+	previewScreen.addButton(
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
+
+	ModelPreview cityMapPreview = new ModelPreview("City Map", "crusin down tha street", 0,
+		ModelFactory.getGameModelInstance("models/maps/previews/preview_city.g3db", 0, 0, 0));
+	previewScreen.addPreviewModel(cityMapPreview);
+	
+	previewScreen.getMenuTable().setBackground();
     }
 
     private void previewVehicles() {
@@ -120,10 +134,10 @@ public class GGJTwentySeventeenGame extends Game {
     public void onMenuAction(int action) {
 
 	if (action > lastMenuAction) { // play menu action sound
-	    systemSounds.get("menuAction").play();
+	    systemSounds.get("menuAction").play(GlobalGameSettings.loudeness_fx);
 	}
 	if (action < lastMenuAction) {
-	    systemSounds.get("menuBack").play();
+	    systemSounds.get("menuBack").play(GlobalGameSettings.loudeness_fx);
 	}
 	lastMenuAction = action;
 
@@ -134,9 +148,17 @@ public class GGJTwentySeventeenGame extends Game {
 	case ScreenMenuActions.OPTIONS:
 	    setScreen(optionsSreen);
 	    break;
+
 	case ScreenMenuActions.PREVIEW_MAPS:
 	    previewMaps();
 	    break;
+	case ScreenMenuActions.NEXT_MAP:
+	    previewScreen.next();
+	    break;
+	case ScreenMenuActions.PREVIOUS_MAP:
+	    previewScreen.previous();
+	    break;
+
 	case ScreenMenuActions.PREVIEW_VEHICLES:
 	    previewVehicles();
 	    break;
@@ -148,6 +170,7 @@ public class GGJTwentySeventeenGame extends Game {
 	    break;
 	case ScreenMenuActions.NULL:
 	default:
+	    System.out.println("Menu action: null - This should not happen");
 	    break;
 	}
     }
