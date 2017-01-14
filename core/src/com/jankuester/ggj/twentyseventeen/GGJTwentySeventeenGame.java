@@ -17,7 +17,7 @@ import com.jankuester.ggj.twentyseventeen.screens.Optionsscreen;
 import com.jankuester.ggj.twentyseventeen.screens.PreviewScreen;
 import com.jankuester.ggj.twentyseventeen.screens.StartScreen;
 import com.jankuester.ggj.twentyseventeen.screens.actions.ScreenMenuActions;
-import com.jankuester.ggj.twentyseventeen.screens.components.ScreenComponentFactory;
+import com.jankuester.ggj.twentyseventeen.screens.components.UIFactory;
 import com.jankuester.ggj.twentyseventeen.screens.components.ScreenMenuTextButton;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
@@ -50,7 +50,7 @@ public class GGJTwentySeventeenGame extends Game {
 	Gdx.graphics.setResizable(true);
 
 	menuListener = new MenuListener(this);
-	ScreenComponentFactory.init();
+	UIFactory.init();
 	initSystemSounds();
     }
 
@@ -68,48 +68,48 @@ public class GGJTwentySeventeenGame extends Game {
 	startScreen.setBackgroundImage(startBg, false);
 	startScreen.setBackgroundAudio(Gdx.audio.newMusic(Gdx.files.internal("audio/menu/bg_main.mp3")));
 	startScreen.addInputListener(menuListener);
-	startScreen.addText(ScreenComponentFactory.createLabel("GLOBAL GAME JAM 2017"));
-	startScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "ARCADE MODE", Color.GREEN));
+
+	// create big name
+	startScreen.addText(UIFactory.createLabel("GLOBAL GAME JAM 2017", UIFactory.largeFont, null));
+
 	startScreen
-		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", Color.BLACK));
-	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.EXIT, "EXIT", Color.BLACK));
+		.addButton(UIFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "ARCADE MODE", 300, 200, 0, 0));
+	startScreen.addButton(UIFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", 300, 200, 0, 0));
+	startScreen.addButton(UIFactory.createMenuButton(ScreenMenuActions.EXIT, "EXIT", 300, 200, 0, 0));
 	startScreen.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     public void createOptionsScreen() {
 	optionsSreen = new Optionsscreen();
 	optionsSreen.addInputListener(menuListener);
-	optionsSreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
+	optionsSreen
+		.addButton(UIFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", 300, 100, 0, 0));
 	optionsSreen.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     }
 
     private void previewMaps() {
 	if (previewMapScreen == null) {
-	    initPreviewScreen();
+	    initPreviewMapScreen();
 	}
 	setScreen(previewMapScreen);
     }
 
-    private void initPreviewScreen() {
+    private void initPreviewMapScreen() {
 	previewMapScreen = new PreviewScreen();
 	Texture background = new Texture(Gdx.files.internal("images/bg_space.jpg"));
 	previewMapScreen.setBackgroundImage(background, false);
 	previewMapScreen.addInputListener(menuListener);
-	previewMapScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_VEHICLES, "SELECT", Color.BLACK));
 	previewMapScreen
-		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.NEXT_MAP, "NEXT", Color.BLACK));
-	previewMapScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIOUS_MAP, "PREVIOUS", Color.BLACK));
-	previewMapScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
+		.addButton(UIFactory.createMenuButton(ScreenMenuActions.PREVIEW_VEHICLES, "SELECT", 300, 200, 0, 0));
+	previewMapScreen.addButton(UIFactory.createMenuButton(ScreenMenuActions.NEXT_MAP, "NEXT", 300, 200, 0, 0));
+	previewMapScreen
+		.addButton(UIFactory.createMenuButton(ScreenMenuActions.PREVIOUS_MAP, "PREVIOUS", 300, 200, 0, 0));
+	previewMapScreen
+		.addButton(UIFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", 300, 200, 0, 0));
 
 	ModelPreview cityMapPreview = new ModelPreview("City Map", "crusin down tha street", 0,
 		ModelFactory.getGameModelInstance("models/maps/previews/preview_city.g3db", 0, 0, 0));
 	previewMapScreen.addPreviewModel(cityMapPreview);
-	
     }
 
     private void previewVehicles() {
@@ -118,16 +118,16 @@ public class GGJTwentySeventeenGame extends Game {
 	}
 	setScreen(previewVehicleScreen);
     }
-    
+
     private void initPreviewVehicleScreen() {
 	previewVehicleScreen = new PreviewScreen();
 	Texture background = new Texture(Gdx.files.internal("images/bg_space.jpg"));
 	previewVehicleScreen.setBackgroundImage(background, false);
 	previewVehicleScreen.addInputListener(menuListener);
+	previewVehicleScreen
+		.addButton(UIFactory.createMenuButton(ScreenMenuActions.GAME, "START RACE", 300, 100, 0, 0));
 	previewVehicleScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.GAME, "START RACE", Color.BLACK));
-	previewVehicleScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_VEHICLES, "BACK TO MAP PREVIEW", Color.BLACK));
+		UIFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "BACK TO MAP PREVIEW", 300, 100, 0, 0));
 
 	ModelPreview vehiclePreview_mid = new ModelPreview("Vehicle Mid", "Average", 0,
 		ModelFactory.getGameModelInstance("models/vehicles/vehicle_mide.g3db", 0, 0, 0));
@@ -181,7 +181,7 @@ public class GGJTwentySeventeenGame extends Game {
 	case ScreenMenuActions.PREVIEW_VEHICLES:
 	    previewVehicles();
 	    break;
-	    
+
 	case ScreenMenuActions.GAME:
 	    startGame();
 	    break;

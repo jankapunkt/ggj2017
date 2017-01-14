@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -16,6 +17,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -23,6 +25,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.jankuester.ggj.twentyseventeen.GGJTwentySeventeenGame;
+import com.jankuester.ggj.twentyseventeen.screens.components.UIFactory;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
 public class ScreenBase implements Screen {
@@ -48,6 +51,7 @@ public class ScreenBase implements Screen {
     private Texture backgroundRef;
 
     private boolean paused;
+    private boolean created = false;
 
     public ScreenBase() {
 	uiElements = new ArrayList<Actor>();
@@ -55,7 +59,7 @@ public class ScreenBase implements Screen {
     }
 
     public void create() {
-
+	
 	camera = new OrthographicCamera();
 	camera.setToOrtho(false, width, height); // ** w/h ratio = 1.66 **//
 	spriteBatch = new SpriteBatch();
@@ -66,7 +70,6 @@ public class ScreenBase implements Screen {
 	Gdx.input.setInputProcessor(stage); // ** stage is responsive **//
 
 	menuTable = new Table();
-
 	for (Actor uiElement : uiElements) {
 	    menuTable.row(); // new row entry
 	    for (InputListener listener : listeners) {
@@ -74,9 +77,10 @@ public class ScreenBase implements Screen {
 	    }
 	    menuTable.add(uiElement);
 	}
-
+	
 	menuTable.align(Align.center);
 	menuTable.setPosition(this.width / 2, this.height / 2);
+	menuTable.setBackground(UIFactory.createBackground(Color.CYAN, 1.0f, 100, 100));
 	stage.addActor(menuTable);
 
 	if (backgroundMusic != null) {
@@ -88,7 +92,8 @@ public class ScreenBase implements Screen {
     
     @Override
     public void show() {
-	create();
+	if (!created)
+	    create();
     }
 
     @Override

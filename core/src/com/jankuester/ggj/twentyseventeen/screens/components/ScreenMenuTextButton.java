@@ -3,42 +3,35 @@ package com.jankuester.ggj.twentyseventeen.screens.components;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 
-public class ScreenMenuTextButton extends TextButton
-{
-	private final int action;
+public class ScreenMenuTextButton extends TextButton {
+    private final int action;
 
-	private boolean disabled = false;
-	
-	public ScreenMenuTextButton(String text, Skin skin, byte action)
-	{
-		super(text, skin);
-		this.action = action;
-	}
+    private boolean disabled = false;
 
-	public ScreenMenuTextButton(String text, TextButtonStyle style, int action)
-	{
-		super(text, style);
-		this.action = action;
-	}
+    public ScreenMenuTextButton(String text, Skin skin, byte action) {
+	super(text, skin);
+	this.action = action;
+    }
 
-	public ScreenMenuTextButton(String text, Skin skin, String styleName, int action)
-	{
-		super(text, skin, styleName);
-		this.action = action;
-	}
+    public ScreenMenuTextButton(String text, TextButtonStyle style, int action) {
+	super(text, style);
+	this.action = action;
+    }
 
-	public int getAction()
-	{
-		return action;
-	}
+    public ScreenMenuTextButton(String text, Skin skin, String styleName, int action) {
+	super(text, skin, styleName);
+	this.action = action;
+    }
 
-	public boolean isDisabled()
-	{
-		return disabled;
-	}
+    public int getAction() {
+	return action;
+    }
 
-	public void setDisabled(boolean disabled)
-	{
-		this.disabled = disabled;
-	}
+    public boolean isDisabled() {
+	return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+	this.disabled = disabled;
+    }
 }

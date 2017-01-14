@@ -1,8 +1,6 @@
 package com.jankuester.ggj.twentyseventeen.models.utils;
 
 import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.graphics.g3d.Model;
-import com.badlogic.gdx.math.Vector3;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 
 public class ModelPreview {

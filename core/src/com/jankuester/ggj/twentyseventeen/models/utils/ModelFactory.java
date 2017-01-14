@@ -2,8 +2,10 @@ package com.jankuester.ggj.twentyseventeen.models.utils;
 
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.loader.G3dModelLoader;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.UBJsonReader;
@@ -15,9 +17,13 @@ public class ModelFactory {
 	jsonReader.oldFormat = true;
 	G3dModelLoader modelLoader = new G3dModelLoader(jsonReader);
 	Model m = modelLoader.loadModel(Gdx.files.getFileHandle(g3dbPath, Files.FileType.Internal));
-	Material mat = m.materials.get(0);
-
+//	Material mat = m.materials.get(0);
+//	mat.set(new ColorAttribute(ColorAttribute.Diffuse, Color.RED));
 	return m;
+    }
+    
+    public static GameModelInstance getGameModelInstance(Model model, Vector3 initialPos) { //TODO throws exceptions and so on
+	return new GameModelInstance(model, initialPos);
     }
     
     public static GameModelInstance getGameModelInstance(String g3dbPath, Vector3 initialPos) { //TODO throws exceptions and so on

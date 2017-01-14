@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Vector3;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 import com.jankuester.ggj.twentyseventeen.models.maps.Sun;
@@ -19,17 +20,20 @@ public class PreviewScreen extends ScreenBase {
 
     private final ArrayList<ModelPreview> previewModels;
     private final ModelBatch modelBatch;
+    private final Environment environment;
 
     private Camera perspectiveCam;
+    private Sun sun_left, sun_right;
 
     private float rot = 0;
 
     private int currentPreview = 0;
-    private Environment environment;
 
     public PreviewScreen() {
 	previewModels = new ArrayList<ModelPreview>();
 	modelBatch = new ModelBatch();
+	environment = new Environment();
+	environment.clear();
     }
 
     public boolean addPreviewModel(ModelPreview previewModel) {
@@ -58,8 +62,8 @@ public class PreviewScreen extends ScreenBase {
     public void create() {
 	super.create();
 
-	environment = new Environment();
-	environment.add(Sun.createSun(0, 30, 0, Color.WHITE, 20000).getLight());
+	// environment.add(Sun.createSun(0, 30, 0, Color.WHITE,
+	// 20000).getLight());
 
 	perspectiveCam = new PerspectiveCamera(75.0f, width, height);
 	perspectiveCam.position.set(0, 5, 15);
@@ -67,9 +71,14 @@ public class PreviewScreen extends ScreenBase {
 	// camera.lookAt(Vector3.Z);
 	camera.lookAt(Vector3.Zero);
 	camera.near = 0.1f;
-	camera.far = 1000f;
-	
+	camera.far = 200f;
+
 	font = new BitmapFont();
+
+	// sun_left = Sun.createSun(0, 5, 15, Color.GOLD, 1500);
+	// environment.add(Sun.createPointLight(0, 0, 0, Color.WHITE, 5000));
+	// environment.add(new PointLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f,
+	// -0.8f, 100));
     }
 
     @Override
@@ -82,9 +91,9 @@ public class PreviewScreen extends ScreenBase {
 	currentPreview.getModel().transform.rotate(Vector3.Y, delta * 6f);
 	stage.act();
 
-	// d clear gl
+	// clear gl
 	Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-	Gdx.gl.glClearColor(1, 1, 1, 1);
+	Gdx.gl.glClearColor(1,1,1,1);
 	Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 	Gdx.gl.glEnable(GL20.GL_TEXTURE_2D);
 
@@ -99,8 +108,6 @@ public class PreviewScreen extends ScreenBase {
 	modelBatch.begin(perspectiveCam);
 	modelBatch.render(currentPreview.getModel(), environment);
 	modelBatch.end();
-	
-	
 
 	// draw buttons
 	if (this.uiElements.size() > 0) {
