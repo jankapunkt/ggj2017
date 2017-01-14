@@ -114,7 +114,7 @@ public class ScreenComponentFactory {
 	if (!initiated)
 	    init();
 	Label label = new Label(text, style);
-	label = setLabelBackgroundColor(label, Color.DARK_GRAY);
+	label = setLabelBackgroundColor(label, Color.DARK_GRAY, 1.0f);
 	return label;
     }
 

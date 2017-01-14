@@ -28,7 +28,8 @@ public class GGJTwentySeventeenGame extends Game {
 
     private MenuListener menuListener;
     private HashMap<String, Sound> systemSounds;
-    private PreviewScreen previewScreen;
+    private PreviewScreen previewMapScreen;
+    private PreviewScreen previewVehicleScreen;
 
     // ====================================================================
     //
@@ -85,34 +86,53 @@ public class GGJTwentySeventeenGame extends Game {
     }
 
     private void previewMaps() {
-	if (previewScreen == null) {
+	if (previewMapScreen == null) {
 	    initPreviewScreen();
 	}
-	setScreen(previewScreen);
+	setScreen(previewMapScreen);
     }
 
     private void initPreviewScreen() {
-	previewScreen = new PreviewScreen();
+	previewMapScreen = new PreviewScreen();
 	Texture background = new Texture(Gdx.files.internal("images/bg_space.jpg"));
-	previewScreen.setBackgroundImage(background, false);
-	previewScreen.addInputListener(menuListener);
-	previewScreen.addButton(
+	previewMapScreen.setBackgroundImage(background, false);
+	previewMapScreen.addInputListener(menuListener);
+	previewMapScreen.addButton(
 		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_VEHICLES, "SELECT", Color.BLACK));
-	previewScreen
+	previewMapScreen
 		.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.NEXT_MAP, "NEXT", Color.BLACK));
-	previewScreen.addButton(
+	previewMapScreen.addButton(
 		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIOUS_MAP, "PREVIOUS", Color.BLACK));
-	previewScreen.addButton(
+	previewMapScreen.addButton(
 		ScreenComponentFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", Color.BLACK));
 
 	ModelPreview cityMapPreview = new ModelPreview("City Map", "crusin down tha street", 0,
 		ModelFactory.getGameModelInstance("models/maps/previews/preview_city.g3db", 0, 0, 0));
-	previewScreen.addPreviewModel(cityMapPreview);
+	previewMapScreen.addPreviewModel(cityMapPreview);
 	
     }
 
     private void previewVehicles() {
+	if (previewVehicleScreen == null) {
+	    initPreviewVehicleScreen();
+	}
+	setScreen(previewVehicleScreen);
+    }
+    
+    private void initPreviewVehicleScreen() {
+	previewVehicleScreen = new PreviewScreen();
+	Texture background = new Texture(Gdx.files.internal("images/bg_space.jpg"));
+	previewVehicleScreen.setBackgroundImage(background, false);
+	previewVehicleScreen.addInputListener(menuListener);
+	previewVehicleScreen.addButton(
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.GAME, "START RACE", Color.BLACK));
+	previewVehicleScreen.addButton(
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_VEHICLES, "BACK TO MAP PREVIEW", Color.BLACK));
 
+	ModelPreview vehiclePreview_mid = new ModelPreview("Vehicle Mid", "Average", 0,
+		ModelFactory.getGameModelInstance("models/vehicles/vehicle_mide.g3db", 0, 0, 0));
+	vehiclePreview_mid.setScale(4);
+	previewVehicleScreen.addPreviewModel(vehiclePreview_mid);
     }
 
     private void startGame() {
@@ -152,15 +172,16 @@ public class GGJTwentySeventeenGame extends Game {
 	    previewMaps();
 	    break;
 	case ScreenMenuActions.NEXT_MAP:
-	    previewScreen.next();
+	    previewMapScreen.next();
 	    break;
 	case ScreenMenuActions.PREVIOUS_MAP:
-	    previewScreen.previous();
+	    previewMapScreen.previous();
 	    break;
 
 	case ScreenMenuActions.PREVIEW_VEHICLES:
 	    previewVehicles();
 	    break;
+	    
 	case ScreenMenuActions.GAME:
 	    startGame();
 	    break;

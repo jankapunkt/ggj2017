@@ -11,6 +11,8 @@ public class ModelPreview {
     private final String description;
     private final int difficulty;
     private final GameModelInstance model;
+    
+    private float scale = 1.0f;
 
     public ModelPreview(String name, String description, int difficulty, GameModelInstance model) {
 	this.name = name;
@@ -42,4 +44,12 @@ public class ModelPreview {
 	return model;
     }
 
+    public float getScale() {
+	return scale;
+    }
+    
+    public void setScale(float scale) {
+	this.scale = scale;
+	this.model.transform.scl(scale);
+    }
 }
