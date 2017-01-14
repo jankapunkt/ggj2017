@@ -8,13 +8,17 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.utils.Array;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 import com.jankuester.ggj.twentyseventeen.models.maps.Sun;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelPreview;
+import com.jankuester.ggj.twentyseventeen.screens.components.UIFactory;
 
 public class PreviewScreen extends ScreenBase {
 
@@ -73,7 +77,7 @@ public class PreviewScreen extends ScreenBase {
 	camera.near = 0.1f;
 	camera.far = 200f;
 
-	font = new BitmapFont();
+	font = UIFactory.mediumFont;
 
 	// sun_left = Sun.createSun(0, 5, 15, Color.GOLD, 1500);
 	// environment.add(Sun.createPointLight(0, 0, 0, Color.WHITE, 5000));
@@ -93,15 +97,17 @@ public class PreviewScreen extends ScreenBase {
 
 	// clear gl
 	Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-	Gdx.gl.glClearColor(1,1,1,1);
+	Gdx.gl.glClearColor(1, 1, 1, 1);
 	Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 	Gdx.gl.glEnable(GL20.GL_TEXTURE_2D);
 
+	SpriteBatch stagebatch = (SpriteBatch) stage.getBatch();
+
 	// draw background
 	if (this.backgroundImage != null) {
-	    spriteBatch.begin();
-	    spriteBatch.draw(backgroundImage, 0, 0, width, height);
-	    spriteBatch.end();
+	    stagebatch.begin();
+	    stagebatch.draw(backgroundImage, 0, 0, width, height);
+	    stagebatch.end();
 	}
 
 	// draw current model
@@ -111,13 +117,18 @@ public class PreviewScreen extends ScreenBase {
 
 	// draw buttons
 	if (this.uiElements.size() > 0) {
-	    spriteBatch.setProjectionMatrix(camera.combined);
+	    // spriteBatch.setProjectionMatrix(camera.combined);
 	    spriteBatch.begin();
 	    stage.draw();
-	    font.draw(spriteBatch, currentPreview.getName(), 20, 20);
-	    font.draw(spriteBatch, currentPreview.getDescription(), 20, 80);
 	    spriteBatch.end();
 	}
+
+	spriteBatch.begin();
+	font.draw(spriteBatch, currentPreview.getName(), 20, height - 20);
+	font.draw(spriteBatch, currentPreview.getDescription(), 20, height - 60);
+	font.draw(spriteBatch, currentPreview.getDifficulty(), 20, height - 100);
+	spriteBatch.end();
+
     }
 
     @Override

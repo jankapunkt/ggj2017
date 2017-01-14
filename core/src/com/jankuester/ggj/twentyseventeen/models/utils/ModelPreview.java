@@ -11,7 +11,7 @@ public class ModelPreview {
     private final GameModelInstance model;
     
     private float scale = 1.0f;
-
+  
     public ModelPreview(String name, String description, int difficulty, GameModelInstance model) {
 	this.name = name;
 	this.description = description;
@@ -34,8 +34,17 @@ public class ModelPreview {
 	return description;
     }
 
-    public int getDifficulty() {
-	return difficulty;
+    public String getDifficulty() {
+	switch (difficulty) {
+	case 0:
+	    return "easy";
+	case 1:
+	    return "medium";
+	case 2:
+	    return "hard";
+	default:
+	    throw new Error("no difficulty set");
+	}
     }
 
     public GameModelInstance getModel() {
