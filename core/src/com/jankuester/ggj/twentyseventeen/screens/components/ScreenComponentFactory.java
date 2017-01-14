@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFont
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 
@@ -56,14 +57,28 @@ public class ScreenComponentFactory {
 	return font;
     }
 
-    public static Label setLabelbackground(Label label, Color color) {
-	color.a = 0.6f;
+    public static Label setLabelBackgroundColor(Label label, Color color, float alpha) {
+	color.a = alpha;
 	Pixmap labelColor = new Pixmap((int) label.getWidth(), (int) label.getHeight(), Format.RGBA8888);
 	labelColor.setColor(color);
 	labelColor.fill();
 	label.getStyle().background = new Image(new Texture(labelColor)).getDrawable();
 	return label;
     }
+    
+    public static TextButton setButtonBackgroundColor(TextButton button, Color color, float alpha) {
+	return (TextButton)setTableBackgroundColor(button, color, alpha);
+    }
+    
+    public static Table setTableBackgroundColor(Table table, Color color, float alpha) {
+	color.a = alpha;
+	Pixmap labelColor = new Pixmap((int) table.getWidth(), (int) table.getHeight(), Format.RGBA8888);
+	labelColor.setColor(color);
+	labelColor.fill();
+	table.setBackground(new Image(new Texture(labelColor)).getDrawable()); 
+	return table;
+    }
+    
 
     public static TextButtonStyle defaultTextButtonStyle() {
 	if (!initiated)
@@ -99,7 +114,7 @@ public class ScreenComponentFactory {
 	if (!initiated)
 	    init();
 	Label label = new Label(text, style);
-	label = setLabelbackground(label, Color.DARK_GRAY);
+	label = setLabelBackgroundColor(label, Color.DARK_GRAY);
 	return label;
     }
 
