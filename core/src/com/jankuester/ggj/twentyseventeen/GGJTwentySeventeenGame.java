@@ -40,8 +40,6 @@ public class GGJTwentySeventeenGame extends Game {
     private HashMap<String, Sound> systemSounds;
     private Music backgroundMusic;
 
-    
-    
     // ====================================================================
     //
     // CREATE
@@ -82,8 +80,6 @@ public class GGJTwentySeventeenGame extends Game {
 	    backgroundMusic.play();
 	}
     }
-    
-    
 
     private void queueScreen(ScreenBase screen) {
 	setScreen(loadingScreen);
@@ -134,13 +130,19 @@ public class GGJTwentySeventeenGame extends Game {
 
     private void gameScreen() {
 
+	backgroundMusic.stop();
+	
 	GameScreen gameScreen = new GameScreen();
 	gameScreen.addInputListener(menuListener);
 
 	// get selection from the other screens
-	String selectedMap = previewMapScreen.getCurrentPreview().getId();
-	gameScreen.setMapId(selectedMap);
-
+	gameScreen.setMapId(previewMapScreen.getCurrentPreview().getId());
+	gameScreen.setVehicleId(previewMapScreen.getCurrentPreview().getId());
+	gameScreen.setMapDifficulty(previewMapScreen.getCurrentPreview().getDifficulty());
+	gameScreen.setVehicleAgility(previewVehicleScreen.getCurrentPreview().getAgility());
+	gameScreen.setVehicleSpeed(previewVehicleScreen.getCurrentPreview().getSpeed());
+	gameScreen.setVehicleShield(previewVehicleScreen.getCurrentPreview().getShield());
+	
 	queueScreen(gameScreen);
 	unloadMenuScreens();
     }
@@ -179,7 +181,7 @@ public class GGJTwentySeventeenGame extends Game {
 	    systemSounds.get("menuBack").play(GlobalGameSettings.loudeness_fx);
 	}
 	lastMenuAction = action;
-
+	
 	switch (action) {
 	case ScreenMenuActions.START:
 	    startScreen();
@@ -247,17 +249,12 @@ public class GGJTwentySeventeenGame extends Game {
 	    if (event.getListenerActor() instanceof ScreenMenuTextButton) {
 		ScreenMenuTextButton target = (ScreenMenuTextButton) event.getListenerActor();
 		game.onMenuHover(target.getAction());
-	    } else {
-
 	    }
 	    return super.mouseMoved(event, x, y);
 	}
 
 	@Override
 	public boolean keyDown(InputEvent event, int keycode) {
-	    if (keycode == Input.Keys.ESCAPE) {
-
-	    }
 	    return super.keyDown(event, keycode);
 	}
     }

@@ -128,12 +128,12 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
 	// sound shot
 	sounds = new HashMap<String, Sound>();
-	sounds.put("walk", Gdx.audio.newSound(Gdx.files.internal("audio/walk.mp3")));
-	sounds.put("jump", Gdx.audio.newSound(Gdx.files.internal("audio/jump.mp3")));
+	//sounds.put("walk", Gdx.audio.newSound(Gdx.files.internal("audio/walk.mp3")));
+	//sounds.put("jump", Gdx.audio.newSound(Gdx.files.internal("audio/jump.mp3")));
 
 	// TODO this must be put into Weapon class
-	sounds.put("shot1", Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_shot.mp3")));
-	sounds.put("empty", Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_empty.mp3")));
+	//sounds.put("shot1", Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_shot.mp3")));
+	//sounds.put("empty", Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_empty.mp3")));
 
 	this.userData = new Color(position.x, position.y, position.z, 1f);
     }
@@ -392,7 +392,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	    charControl.jump();
 	    jumpMove = false;
 	    if (charControl.canJump()) {
-		playSound(SOUNDS_JUMP);
+		//playSound(SOUNDS_JUMP);
 	    }
 	}
 
@@ -405,10 +405,12 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
 	    charControl.setWalkDirection(transl);
 	    if (!soundWalkIsPlaying)
-		playSound(SOUNDS_WALK);
+	    {
+		//playSound(SOUNDS_WALK);
+	    }
 	} else {
 	    charControl.setWalkDirection(Vector3.Zero);
-	    stopSound(SOUNDS_WALK);
+	    //stopSound(SOUNDS_WALK);
 	}
     }
 
@@ -576,12 +578,12 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
     public boolean shootWeapon() {
 	if (currentWeaponState == null || currentWeaponState.ammo <= 0) {
-	    playSound("empty");
+	   // playSound("empty");
 	    return false;
 	}
 
 	currentWeaponState.ammo--;
-	playSound("shot");
+	//playSound("shot");
 	isShooting = true;
 	return true;
     }
