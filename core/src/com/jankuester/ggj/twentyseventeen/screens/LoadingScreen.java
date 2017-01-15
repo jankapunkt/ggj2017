@@ -2,7 +2,6 @@ package com.jankuester.ggj.twentyseventeen.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
-import com.jankuester.ggj.twentyseventeen.screens.factories.ScreenComponentFactory;
 
 public class LoadingScreen extends ScreenBase {
 
@@ -22,6 +21,10 @@ public class LoadingScreen extends ScreenBase {
 	}
 	font.draw(spriteBatch, "loading...", 20, height/3);
 	spriteBatch.end();
-
+    }
+    
+    @Override
+    public void dispose() {
+        super.dispose();
     }
 }

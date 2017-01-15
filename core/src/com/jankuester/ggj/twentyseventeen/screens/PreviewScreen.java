@@ -4,20 +4,19 @@ import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
-import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 import com.jankuester.ggj.twentyseventeen.models.maps.Sun;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelPreview;
+import com.jankuester.ggj.twentyseventeen.screens.actions.ScreenMenuActions;
+import com.jankuester.ggj.twentyseventeen.screens.components.ScreenMenuTextButton;
 import com.jankuester.ggj.twentyseventeen.screens.factories.ScreenComponentFactory;
 
 public class PreviewScreen extends ScreenBase {
@@ -29,15 +28,16 @@ public class PreviewScreen extends ScreenBase {
     private Camera perspectiveCam;
     private Sun sun_left, sun_right;
 
-    private float rot = 0;
-
     private int currentPreview = 0;
+    private ScreenMenuTextButton prevButton;
+    private ScreenMenuTextButton nextButton;
+    
+    
 
     public PreviewScreen() {
 	previewModels = new ArrayList<ModelPreview>();
 	modelBatch = new ModelBatch();
 	environment = new Environment();
-	environment.clear();
     }
 
     public boolean addPreviewModel(ModelPreview previewModel) {
@@ -51,14 +51,22 @@ public class PreviewScreen extends ScreenBase {
     public ModelPreview getCurrentPreview() {
 	return previewModels.get(currentPreview);
     }
+    
+    public boolean hasNext(){
+	return currentPreview < previewModels.size() - 1;
+    }
 
+    public boolean hasPrevious(){
+	return currentPreview > 0;
+    }
+    
     public void next() {
-	if (currentPreview < previewModels.size() - 1)
+	if (hasNext())
 	    currentPreview++;
     }
 
     public void previous() {
-	if (currentPreview > 0)
+	if (hasPrevious())
 	    currentPreview--;
     }
 
@@ -66,6 +74,13 @@ public class PreviewScreen extends ScreenBase {
     public void create() {
 	super.create();
 
+	
+	nextButton = ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIOUS, "<", 300, 200, 10, height/2);
+	stage.addActor(nextButton);
+	
+	prevButton = ScreenComponentFactory.createMenuButton(ScreenMenuActions.NEXT, ">", 300, 200, width-300, height/2);
+	stage.addActor(prevButton);
+	
 	// environment.add(Sun.createSun(0, 30, 0, Color.WHITE,
 	// 20000).getLight());
 
@@ -78,18 +93,22 @@ public class PreviewScreen extends ScreenBase {
 	camera.far = 200f;
 
 	font = ScreenComponentFactory.mediumFont;
-
+	
 	// sun_left = Sun.createSun(0, 5, 15, Color.GOLD, 1500);
 	// environment.add(Sun.createPointLight(0, 0, 0, Color.WHITE, 5000));
 	// environment.add(new PointLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f,
 	// -0.8f, 100));
+	updateMenuButtons();
+    }
+
+    private void updateMenuButtons() {
+	nextButton.setDisabled(!hasNext());
+	prevButton.setDisabled(!hasPrevious());
     }
 
     @Override
     public void render(float delta) {
-
 	ModelPreview currentPreview = getCurrentPreview();
-	camera.position.set(500, 500, 500);
 
 	// world step
 	currentPreview.getModel().transform.rotate(Vector3.Y, delta * 6f);
@@ -126,7 +145,7 @@ public class PreviewScreen extends ScreenBase {
 	spriteBatch.begin();
 	font.draw(spriteBatch, currentPreview.getName(), 20, height - 20);
 	font.draw(spriteBatch, currentPreview.getDescription(), 20, height - 60);
-	font.draw(spriteBatch, "Difficulty: " + currentPreview.getDifficultyString() , 20, height - 100);
+	font.draw(spriteBatch, "Difficulty: " + currentPreview.getDifficultyString(), 20, height - 100);
 	spriteBatch.end();
 
     }
@@ -135,7 +154,6 @@ public class PreviewScreen extends ScreenBase {
     public void dispose() {
 	modelBatch.dispose();
 	previewModels.clear();
-	font.dispose();
 	super.dispose();
     }
 
@@ -144,5 +162,51 @@ public class PreviewScreen extends ScreenBase {
 	super.resize(width, height);
 	if (perspectiveCam != null)
 	    perspectiveCam.update();
+    }
+
+    public void onMenuAction(int action) {
+	switch (action) {
+	case ScreenMenuActions.NEXT:
+	    next();
+	    updateMenuButtons();
+	    break;
+	case ScreenMenuActions.PREVIOUS:
+	    previous();
+	    updateMenuButtons();
+	    break;
+	default:
+	    break;
+	}
+    }
+    
+    
+    class PreviewListener extends InputListener {
+	private PreviewScreen screen;
+
+	public PreviewListener(PreviewScreen screen) {
+	    super();
+	    this.screen = screen;
+	}
+
+	@Override
+	public boolean touchDown(InputEvent event, float x, float y, int pointer, int button) {
+	    if (event.getListenerActor() instanceof ScreenMenuTextButton) {
+		ScreenMenuTextButton target = (ScreenMenuTextButton) event.getListenerActor();
+		screen.onMenuAction(target.getAction());
+	    } else {
+		//lastMenuHover = -1;
+	    }
+	    return super.touchDown(event, x, y, pointer, button);
+	}
+
+	@Override
+	public boolean mouseMoved(InputEvent event, float x, float y) {
+	    return super.mouseMoved(event, x, y);
+	}
+
+	@Override
+	public boolean keyDown(InputEvent event, int keycode) {
+	    return super.keyDown(event, keycode);
+	}
     }
 }

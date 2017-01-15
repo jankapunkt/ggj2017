@@ -20,7 +20,9 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.Disableable;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.jankuester.ggj.twentyseventeen.GGJTwentySeventeenGame;
@@ -151,14 +153,27 @@ public class ScreenBase implements Screen {
 
     @Override
     public void dispose() {
-	listeners.clear();
-	menuTable.clear();
-	uiElements.clear();
-	spriteBatch.dispose();
-	stage.dispose();
-	backgroundMusic.dispose();
-	backgroundImage.getTexture().dispose();
-	font.dispose();
+	if (listeners != null)
+	    listeners.clear();
+	if (menuTable != null)
+	    menuTable.clear();
+	if (uiElements != null)
+	    uiElements.clear();
+	dispose(spriteBatch);
+	dispose(stage);
+	dispose(backgroundMusic);
+	if (backgroundImage != null && backgroundImage.getTexture() != null)
+	    dispose(backgroundImage.getTexture());
+	dispose(font);
+    }
+
+    private void dispose(Disposable disposeable) {
+	if (disposeable != null) {
+	    try {
+		disposeable.dispose();
+	    } catch (Exception e) {
+	    }
+	}
     }
 
     public Table getMenuTable() {

@@ -10,7 +10,7 @@ public class ScreenMenuActions {
     public static final int PREVIEW_MAPS = 4;
     public static final int PREVIEW_VEHICLES = 5;
 
-    public static final int NEXT_MAP = 6;
-    public static final int PREVIOUS_MAP = 7;
+    public static final int NEXT = 6;
+    public static final int PREVIOUS = 7;
 
 }
