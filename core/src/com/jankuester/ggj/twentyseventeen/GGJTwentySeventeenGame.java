@@ -7,6 +7,7 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
@@ -33,9 +34,14 @@ public class GGJTwentySeventeenGame extends Game {
     private LoadingScreen loadingScreen;
     private ErrorScreen errorScreen;
 
+    private ScreenBase currentScreen;
+
     private MenuListener menuListener;
     private HashMap<String, Sound> systemSounds;
+    private Music backgroundMusic;
 
+    
+    
     // ====================================================================
     //
     // CREATE
@@ -69,7 +75,15 @@ public class GGJTwentySeventeenGame extends Game {
 	systemSounds.put("menuBack", Gdx.audio.newSound(Gdx.files.internal("audio/menu/back.mp3")));
 	systemSounds.put("menuForbidden", Gdx.audio.newSound(Gdx.files.internal("audio/menu/forbidden.mp3")));
 	systemSounds.put("menuHover", Gdx.audio.newSound(Gdx.files.internal("audio/menu/hover.mp3")));
+	backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/menu/bg_main.mp3"));
+	if (backgroundMusic != null) {
+	    backgroundMusic.setLooping(true);
+	    backgroundMusic.setVolume(GlobalGameSettings.loudeness_music);
+	    backgroundMusic.play();
+	}
     }
+    
+    
 
     private void queueScreen(ScreenBase screen) {
 	setScreen(loadingScreen);
@@ -78,6 +92,7 @@ public class GGJTwentySeventeenGame extends Game {
 	} catch (Exception e) {
 	    errorScreen(e);
 	}
+	currentScreen = screen;
     }
 
     private void errorScreen(Exception e) {
@@ -98,9 +113,7 @@ public class GGJTwentySeventeenGame extends Game {
 	    startScreen = ScreenFactory.createStartScreen(menuListener);
 	queueScreen(startScreen);
     }
-    
 
-    
     public void optionsScreen() {
 	if (optionsSreen == null)
 	    optionsSreen = ScreenFactory.createOptionsScreen(menuListener);
@@ -109,7 +122,7 @@ public class GGJTwentySeventeenGame extends Game {
 
     private void previewMapsScreen() {
 	if (previewMapScreen == null)
-	previewMapScreen = ScreenFactory.createPreviewMapScreen(menuListener);
+	    previewMapScreen = ScreenFactory.createPreviewMapScreen(menuListener);
 	queueScreen(previewMapScreen);
     }
 
@@ -127,7 +140,7 @@ public class GGJTwentySeventeenGame extends Game {
 	// get selection from the other screens
 	String selectedMap = previewMapScreen.getCurrentPreview().getId();
 	gameScreen.setMapId(selectedMap);
-	
+
 	queueScreen(gameScreen);
 	unloadMenuScreens();
     }
@@ -140,9 +153,9 @@ public class GGJTwentySeventeenGame extends Game {
 	unload(previewMapScreen);
 	unload(previewVehicleScreen);
     }
-    
-    private void unload(Screen d){
-	if (d != null){
+
+    private void unload(Screen d) {
+	if (d != null) {
 	    d.dispose();
 	    d = null;
 	}

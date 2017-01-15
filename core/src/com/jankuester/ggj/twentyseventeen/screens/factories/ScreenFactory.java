@@ -30,7 +30,6 @@ public class ScreenFactory {
 	StartScreen startScreen = new StartScreen();
 	Texture startBg = new Texture(Gdx.files.internal("images/bg_space.jpg"));
 	startScreen.setBackgroundImage(startBg, false);
-	startScreen.setBackgroundAudio(Gdx.audio.newMusic(Gdx.files.internal("audio/menu/bg_main.mp3")));
 	startScreen.addInputListener(menuListener);
 
 	// create big name

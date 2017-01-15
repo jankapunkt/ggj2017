@@ -20,7 +20,6 @@ import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.Disableable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.Scaling;
@@ -46,10 +45,6 @@ public class ScreenBase implements Screen {
 
     protected ArrayList<Actor> uiElements;
     protected ArrayList<InputListener> listeners;
-
-    private Music backgroundMusic;
-
-    private Texture backgroundRef;
 
     private boolean paused = false;
     private boolean created = false;
@@ -84,11 +79,7 @@ public class ScreenBase implements Screen {
 	menuTable.setBackground(ScreenComponentFactory.createBackground(Color.CYAN, 1.0f, 100, 100));
 	stage.addActor(menuTable);
 
-	if (backgroundMusic != null) {
-	    backgroundMusic.setLooping(true);
-	    backgroundMusic.setVolume(GlobalGameSettings.loudeness_music);
-	    backgroundMusic.play();
-	}
+
     }
 
     @Override
@@ -161,7 +152,6 @@ public class ScreenBase implements Screen {
 	    uiElements.clear();
 	dispose(spriteBatch);
 	dispose(stage);
-	dispose(backgroundMusic);
 	if (backgroundImage != null && backgroundImage.getTexture() != null)
 	    dispose(backgroundImage.getTexture());
 	dispose(font);
@@ -209,8 +199,6 @@ public class ScreenBase implements Screen {
 	}
     }
 
-    public void setBackgroundAudio(Music audio) {
-	this.backgroundMusic = audio;
-    }
+
 
 }

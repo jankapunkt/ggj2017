@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.jankuester.ggj.twentyseventeen.logic.ModelMap;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 import com.jankuester.ggj.twentyseventeen.models.maps.Sun;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelPreview;
@@ -145,7 +146,14 @@ public class PreviewScreen extends ScreenBase {
 	spriteBatch.begin();
 	font.draw(spriteBatch, currentPreview.getName(), 20, height - 20);
 	font.draw(spriteBatch, currentPreview.getDescription(), 20, height - 60);
-	font.draw(spriteBatch, "Difficulty: " + currentPreview.getDifficultyString(), 20, height - 100);
+	if (currentPreview.getType() == ModelMap.MAP){
+	    font.draw(spriteBatch, "Difficulty: " + currentPreview.getDifficultyString(), 20, height - 100);
+	}
+	if (currentPreview.getType() == ModelMap.VEHICLE){
+	    font.draw(spriteBatch, "Speed: " + currentPreview.getSpeedString(), 20, height - 100);
+	    font.draw(spriteBatch, "Agile: " + currentPreview.getAgilityString(), 20, height - 140);
+	    font.draw(spriteBatch, "Shield: " + currentPreview.getShieldString(), 20, height - 180);
+	}
 	spriteBatch.end();
 
     }

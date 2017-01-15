@@ -5,6 +5,7 @@ import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 public class ModelPreview {
 
     private final GameModelInstance model;
+    private final String type;
 
     private String id;
     private String name;
@@ -14,13 +15,17 @@ public class ModelPreview {
     private String _difficulty;
     
     private int agility;
+    private String _agility;
     private int speed;
+    private String _speed;
     private int shield;
-
+    private String _shield;
     private float scale = 1.0f;
 
-    public ModelPreview(GameModelInstance model) {
+
+    public ModelPreview(GameModelInstance model, String type) {
 	this.model = model;
+	this.type = type;
     }
 
     public GameModelInstance getModel() {
@@ -75,25 +80,46 @@ public class ModelPreview {
 
     public void setAgility(int agility) {
 	this.agility = agility;
+	this._agility = Integer.toString(agility);
     }
 
     public int getAgility() {
 	return agility;
     }
+    
+    public String getAgilityString() {
+	return _agility;
+    }
 
     public void setSpeed(int speed) {
 	this.speed = speed;
+	this._speed= Integer.toString(speed);
     }
 
     public int getSpeed() {
 	return speed;
     }
+    
+    public String getSpeedString() {
+	return _speed;
+    }
 
     public void setShield(int shield) {
 	this.shield = shield;
+	this._shield= Integer.toString(shield);
+    }
+    
+    public String getShieldString() {
+	return _shield;
     }
 
     public int getShield() {
 	return shield;
     }
+
+    public String getType() {
+	return type;
+    }
+
+
 }

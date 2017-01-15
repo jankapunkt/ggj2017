@@ -12,6 +12,10 @@ import com.badlogic.gdx.files.FileHandle;
 
 public class ModelMap {
 
+    public static final String VEHICLE = "vehicle";
+    public static final String MAP = "map";
+    
+    
     /**
      * Constants related to properties file entries of maps.
      * 
