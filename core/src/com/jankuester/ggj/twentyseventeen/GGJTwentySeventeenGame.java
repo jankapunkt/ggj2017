@@ -1,5 +1,6 @@
 package com.jankuester.ggj.twentyseventeen;
 
+import java.io.IOException;
 import java.util.HashMap;
 
 import com.badlogic.gdx.Game;
@@ -8,8 +9,10 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.jankuester.ggj.twentyseventeen.logic.ModelMap;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelPreview;
 import com.jankuester.ggj.twentyseventeen.screens.GameScreen;
@@ -39,18 +42,24 @@ public class GGJTwentySeventeenGame extends Game {
 
     @Override
     public void create() {
-	loadGlobalSettings();
-	createStartScreen();
-	createOptionsScreen();
-	setScreen(startScreen);
+	try {
+	    loadGlobalSettings();
+	    createStartScreen();
+	    createOptionsScreen();
+	    setScreen(startScreen);
+	} catch (Exception e) {
+	    // TODO: show error screen with error report
+	    System.out.println(e.getMessage());
+	    e.printStackTrace();
+	}
     }
 
-    private void loadGlobalSettings() {
+    private void loadGlobalSettings() throws IOException {
 	Gdx.graphics.setVSync(true);
 	Gdx.graphics.setResizable(true);
 
+	ModelMap.loadFromProperties("models/modelmapping.properties");
 	menuListener = new MenuListener(this);
-	UIFactory.init();
 	initSystemSounds();
     }
 
@@ -99,16 +108,17 @@ public class GGJTwentySeventeenGame extends Game {
 	Texture background = new Texture(Gdx.files.internal("images/bg_space.jpg"));
 	previewMapScreen.setBackgroundImage(background, false);
 	previewMapScreen.addInputListener(menuListener);
-	previewMapScreen
-		.addButton(UIFactory.createMenuButton(ScreenMenuActions.PREVIEW_VEHICLES, "SELECT", 300, 200, 0, 0));
+	previewMapScreen.addButton(UIFactory.createMenuButton(ScreenMenuActions.PREVIEW_VEHICLES, "SELECT", 300, 200, 0, 0));
 	previewMapScreen.addButton(UIFactory.createMenuButton(ScreenMenuActions.NEXT_MAP, "NEXT", 300, 200, 0, 0));
-	previewMapScreen
-		.addButton(UIFactory.createMenuButton(ScreenMenuActions.PREVIOUS_MAP, "PREVIOUS", 300, 200, 0, 0));
-	previewMapScreen
-		.addButton(UIFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", 300, 200, 0, 0));
+	previewMapScreen.addButton(UIFactory.createMenuButton(ScreenMenuActions.PREVIOUS_MAP, "PREVIOUS", 300, 200, 0, 0));
+	previewMapScreen.addButton(UIFactory.createMenuButton(ScreenMenuActions.START, "BACK TO MAIN MENU", 300, 200, 0, 0));
 
-	ModelPreview cityMapPreview = new ModelPreview("City Map", "crusin down tha street", 0,
-		ModelFactory.getGameModelInstance("models/maps/previews/preview_city.g3db", 0, 0, 0));
+	ModelPreview cityMapPreview = new ModelPreview(
+		ModelMap.getName(ModelMap.Map.MAP_EASY),
+		ModelMap.getDescription(ModelMap.Map.MAP_EASY), 
+		ModelMap.getDifficulty(ModelMap.Map.MAP_EASY),
+		ModelFactory.getGameModelInstance(ModelMap.getPreviewPath(ModelMap.Map.MAP_EASY), 0, 0, 0),
+		ModelMap.getId(ModelMap.Map.MAP_EASY));
 	previewMapScreen.addPreviewModel(cityMapPreview);
     }
 
@@ -130,15 +140,36 @@ public class GGJTwentySeventeenGame extends Game {
 		UIFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "BACK TO MAP PREVIEW", 300, 100, 0, 0));
 
 	ModelPreview vehiclePreview_mid = new ModelPreview("Vehicle Mid", "Average", 0,
-		ModelFactory.getGameModelInstance("models/vehicles/vehicle_mide.g3db", 0, 0, 0));
+		ModelFactory.getGameModelInstance("models/vehicles/vehicle_mide.g3db", 0, 0, 0),
+		"0");
 	vehiclePreview_mid.setScale(4);
 	previewVehicleScreen.addPreviewModel(vehiclePreview_mid);
     }
 
     private void startGame() {
+
 	GameScreen gameScreen = new GameScreen();
 	gameScreen.addInputListener(menuListener);
+
+	// get selection from the other screens
+	String selectedMap = previewMapScreen.getCurrentPreview().getSelectionId();
+
 	setScreen(gameScreen);
+	unloadMenuScreens();
+    }
+
+    private void unloadMenuScreens() {
+	startScreen.dispose();
+	startScreen = null;
+
+	optionsSreen.dispose();
+	optionsSreen = null;
+
+	previewMapScreen.dispose();
+	previewMapScreen = null;
+
+	previewVehicleScreen.dispose();
+	previewVehicleScreen = null;
     }
 
     // ====================================================================
@@ -185,6 +216,7 @@ public class GGJTwentySeventeenGame extends Game {
 	case ScreenMenuActions.GAME:
 	    startGame();
 	    break;
+
 	case ScreenMenuActions.EXIT:
 	    Gdx.app.exit();
 	    break;

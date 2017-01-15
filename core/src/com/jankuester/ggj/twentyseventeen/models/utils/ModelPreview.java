@@ -9,21 +9,25 @@ public class ModelPreview {
     private final String description;
     private final int difficulty;
     private final GameModelInstance model;
+    private final String selectionId;
+    
     
     private float scale = 1.0f;
   
-    public ModelPreview(String name, String description, int difficulty, GameModelInstance model) {
+    public ModelPreview(String name, String description, int difficulty, GameModelInstance model, String selectionId) {
 	this.name = name;
 	this.description = description;
 	this.difficulty = difficulty;
 	this.model = model;
+	this.selectionId = selectionId;
     }
 
-    public ModelPreview(FileHandle propertiesFile) {
+    public ModelPreview(FileHandle propertiesFile, String selectionId) {
 	this.name = null;
 	this.description = null;
 	this.difficulty = 0;
 	this.model = null;
+	this.selectionId = selectionId;
     }
 
     public String getName() {
@@ -58,5 +62,9 @@ public class ModelPreview {
     public void setScale(float scale) {
 	this.scale = scale;
 	this.model.transform.scl(scale);
+    }
+
+    public String getSelectionId() {
+	return this.selectionId;
     }
 }
