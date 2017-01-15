@@ -18,7 +18,7 @@ import com.badlogic.gdx.utils.Array;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 import com.jankuester.ggj.twentyseventeen.models.maps.Sun;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelPreview;
-import com.jankuester.ggj.twentyseventeen.screens.components.UIFactory;
+import com.jankuester.ggj.twentyseventeen.screens.factories.ScreenComponentFactory;
 
 public class PreviewScreen extends ScreenBase {
 
@@ -77,7 +77,7 @@ public class PreviewScreen extends ScreenBase {
 	camera.near = 0.1f;
 	camera.far = 200f;
 
-	font = UIFactory.mediumFont;
+	font = ScreenComponentFactory.mediumFont;
 
 	// sun_left = Sun.createSun(0, 5, 15, Color.GOLD, 1500);
 	// environment.add(Sun.createPointLight(0, 0, 0, Color.WHITE, 5000));
@@ -126,7 +126,7 @@ public class PreviewScreen extends ScreenBase {
 	spriteBatch.begin();
 	font.draw(spriteBatch, currentPreview.getName(), 20, height - 20);
 	font.draw(spriteBatch, currentPreview.getDescription(), 20, height - 60);
-	font.draw(spriteBatch, currentPreview.getDifficulty(), 20, height - 100);
+	font.draw(spriteBatch, "Difficulty: " + currentPreview.getDifficultyString() , 20, height - 100);
 	spriteBatch.end();
 
     }

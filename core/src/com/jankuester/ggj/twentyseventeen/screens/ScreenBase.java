@@ -17,7 +17,6 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -25,7 +24,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.jankuester.ggj.twentyseventeen.GGJTwentySeventeenGame;
-import com.jankuester.ggj.twentyseventeen.screens.components.UIFactory;
+import com.jankuester.ggj.twentyseventeen.screens.factories.ScreenComponentFactory;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
 public class ScreenBase implements Screen {
@@ -42,7 +41,7 @@ public class ScreenBase implements Screen {
     protected OrthographicCamera camera;
     protected SpriteBatch spriteBatch;
     protected BitmapFont font;
-    
+
     protected ArrayList<Actor> uiElements;
     protected ArrayList<InputListener> listeners;
 
@@ -50,7 +49,7 @@ public class ScreenBase implements Screen {
 
     private Texture backgroundRef;
 
-    private boolean paused;
+    private boolean paused = false;
     private boolean created = false;
 
     public ScreenBase() {
@@ -59,7 +58,7 @@ public class ScreenBase implements Screen {
     }
 
     public void create() {
-	
+	font = ScreenComponentFactory.largeFont;
 	camera = new OrthographicCamera();
 	camera.setToOrtho(false, width, height); // ** w/h ratio = 1.66 **//
 	spriteBatch = new SpriteBatch();
@@ -77,10 +76,10 @@ public class ScreenBase implements Screen {
 	    }
 	    menuTable.add(uiElement);
 	}
-	
+
 	menuTable.align(Align.center);
 	menuTable.setPosition(this.width / 2, this.height / 2);
-	menuTable.setBackground(UIFactory.createBackground(Color.CYAN, 1.0f, 100, 100));
+	menuTable.setBackground(ScreenComponentFactory.createBackground(Color.CYAN, 1.0f, 100, 100));
 	stage.addActor(menuTable);
 
 	if (backgroundMusic != null) {
@@ -89,7 +88,7 @@ public class ScreenBase implements Screen {
 	    backgroundMusic.play();
 	}
     }
-    
+
     @Override
     public void show() {
 	if (!created)
@@ -159,12 +158,12 @@ public class ScreenBase implements Screen {
 	stage.dispose();
 	backgroundMusic.dispose();
 	backgroundImage.getTexture().dispose();
+	font.dispose();
     }
-    
+
     public Table getMenuTable() {
 	return menuTable;
     }
-    
 
     public void addInputListener(InputListener listener) {
 	listeners.add(listener);

@@ -1,4 +1,4 @@
-package com.jankuester.ggj.twentyseventeen.screens.components;
+package com.jankuester.ggj.twentyseventeen.screens.factories;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -14,8 +14,9 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.jankuester.ggj.twentyseventeen.screens.components.ScreenMenuTextButton;
 
-public class UIFactory {
+public class ScreenComponentFactory {
 
     ////////////////////////////////////////////////////////////////////
     //
