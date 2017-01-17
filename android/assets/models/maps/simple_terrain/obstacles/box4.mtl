@@ -1,0 +1,13 @@
+# Blender MTL File: 'box.blend'
+# Material Count: 1
+
+newmtl Material
+Ns 96.078431
+Ka 0.000000 0.000000 0.000000
+Kd 0.633249 0.633249 0.633249
+Ks 0.105955 0.121090 0.137131
+Ni 1.000000
+d 1.000000
+illum 2
+map_Kd box_texture_by_fostersfan_imp-d4ri7p6.png
+map_Bump box_texture_by_fostersfan_imp-d4ri7p6.png

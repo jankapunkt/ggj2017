@@ -7,6 +7,7 @@ import java.util.List;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -14,10 +15,16 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.collision.btConvexHullShape;
 import com.badlogic.gdx.physics.bullet.collision.btConvexShape;
+import com.badlogic.gdx.physics.bullet.collision.btConvexTriangleMeshShape;
 import com.badlogic.gdx.physics.bullet.collision.btPairCachingGhostObject;
+import com.badlogic.gdx.physics.bullet.collision.btShapeHull;
+import com.badlogic.gdx.physics.bullet.collision.btSphereShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btKinematicCharacterController;
 import com.badlogic.gdx.utils.Disposable;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
@@ -67,22 +74,6 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     //
     // =====================================================================================================//
 
-    /**
-     * Creates a new Kinematic Character, using btPairCachingGhostObject and
-     * btKinematicCharacterController
-     * 
-     * @param model
-     *            The Mesh model to load into the super constructor.
-     * @param id
-     *            the id used to identify the character (not the id used by
-     *            model)
-     * @param x
-     *            initial spawn pos x
-     * @param y
-     *            initial spawn pos y
-     * @param z
-     *            initial spawn pos z
-     */
     public KinematicCharacter(Model model, String id, float x, float y, float z) {
 	super(model);
 
@@ -94,9 +85,13 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	// initial positio = spawn place
 	position.set(x, y, z);
 	transform.setTranslation(this.position);
+	transform.rotate(Vector3.X, 90);
+	transform.rotate(Vector3.Y, 180);
 
 	// init capsule shape
-	playerColShape = new btCapsuleShape(0.5f, 2f);
+	playerColShape = new btSphereShape(1);
+
+	// playerColShape = new btCapsuleShape(0.5f, 2f); //for less computation
 	playerColShape.calculateLocalInertia(mass, localInertia);
 
 	// ------------------------------------
@@ -119,21 +114,22 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	// for transform and stuff
 	charControl = new btKinematicCharacterController(ghost, playerColShape, .00001f);
 	charControl.setUseGhostSweepTest(false);
-	//charControl.setUpAxis(1); // y-UP
-	charControl.setMaxJumpHeight(25.5f);
+	charControl.setUp(Vector3.Y);//setUpAxis(1); // y-UP
+	charControl.setMaxJumpHeight(5.5f);
 	charControl.setJumpSpeed(20);
-
-	// weapons and items
-	weapons = new WeaponStates();
 
 	// sound shot
 	sounds = new HashMap<String, Sound>();
-	//sounds.put("walk", Gdx.audio.newSound(Gdx.files.internal("audio/walk.mp3")));
-	//sounds.put("jump", Gdx.audio.newSound(Gdx.files.internal("audio/jump.mp3")));
+	// sounds.put("walk",
+	// Gdx.audio.newSound(Gdx.files.internal("audio/walk.mp3")));
+	// sounds.put("jump",
+	// Gdx.audio.newSound(Gdx.files.internal("audio/jump.mp3")));
 
 	// TODO this must be put into Weapon class
-	//sounds.put("shot1", Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_shot.mp3")));
-	//sounds.put("empty", Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_empty.mp3")));
+	// sounds.put("shot1",
+	// Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_shot.mp3")));
+	// sounds.put("empty",
+	// Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_empty.mp3")));
 
 	this.userData = new Color(position.x, position.y, position.z, 1f);
     }
@@ -159,12 +155,6 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     public void update(float delta) {
 	updateMotion(delta);
 	updateCamera();
-
-	virus += delta / 100;
-
-	// System.out.println(virus + " " + (int) (virus));
-	if ((int) virus % 2 == 0)
-	    notifyListeners();
     }
 
     /**
@@ -202,7 +192,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     public PerspectiveCamera camera;
 
     public final Vector3 position = new Vector3();
-    public final Vector3 direction = new Vector3(0, 0, -1);
+    public final Vector3 direction = new Vector3(0, 1, 0);
     public final Vector3 right = new Vector3(0, 0, 0);
 
     public int screenWidth = 0;
@@ -242,7 +232,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
 	if (currentCameraMode == CAMERA_MODE_FIRST) {
 	    camera.position.set(this.position.x, this.position.y, this.position.z);
-	    camera.position.rotate(Vector3.Y, -45);
+	    // camera.position.rotate(Vector3.Y, -45);
 	    camera.lookAt(Vector3.Z);
 	}
 	if (currentCameraMode == CAMERA_MODE_THIRD) {
@@ -300,11 +290,12 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
      */
     protected void updateCamera() {
 	ghost.getWorldTransform(transform);
+
 	if (camera == null || currentCameraMode == CAMERA_MODE_NONE)
 	    return;
 
 	if (currentCameraMode == CAMERA_MODE_FIRST) {
-	    camera.position.set(transform.getTranslation(camera.position).add(0, 1, 0));
+	    camera.position.set(transform.getTranslation(camera.position).add(0, 0, 0));
 	}
 	if (currentCameraMode == CAMERA_MODE_THIRD) {
 	    camera.position.set(transform.getTranslation(camera.position).add(
@@ -392,7 +383,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	    charControl.jump();
 	    jumpMove = false;
 	    if (charControl.canJump()) {
-		//playSound(SOUNDS_JUMP);
+		// playSound(SOUNDS_JUMP);
 	    }
 	}
 
@@ -404,13 +395,12 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 		transl.limit(0.12f);
 
 	    charControl.setWalkDirection(transl);
-	    if (!soundWalkIsPlaying)
-	    {
-		//playSound(SOUNDS_WALK);
+	    if (!soundWalkIsPlaying) {
+		// playSound(SOUNDS_WALK);
 	    }
 	} else {
 	    charControl.setWalkDirection(Vector3.Zero);
-	    //stopSound(SOUNDS_WALK);
+	    // stopSound(SOUNDS_WALK);
 	}
     }
 
@@ -578,12 +568,12 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
     public boolean shootWeapon() {
 	if (currentWeaponState == null || currentWeaponState.ammo <= 0) {
-	   // playSound("empty");
+	    // playSound("empty");
 	    return false;
 	}
 
 	currentWeaponState.ammo--;
-	//playSound("shot");
+	// playSound("shot");
 	isShooting = true;
 	return true;
     }

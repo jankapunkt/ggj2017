@@ -116,6 +116,11 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	loadUI();
 
 	// --------------------------------------------
+	// LOAD ENVIRONMENT
+	// --------------------------------------------
+	loadEnvironment();
+	
+	// --------------------------------------------
 	// LOAD BULLET BEFORE MODELS
 	// --------------------------------------------
 	loadBulletPhysics();
@@ -124,17 +129,12 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// LOAD MAP AND OBJECTS
 	// --------------------------------------------
 	loadMap();
-	// loadMapObjectsAndItems();
+	loadMapObjectsAndItems();
 
 	// --------------------------------------------
 	// LOAD PLAYER
 	// --------------------------------------------
 	loadPlayer();
-
-	// --------------------------------------------
-	// LOAD ENVIRONMENT
-	// --------------------------------------------
-	loadEnvironment();
 
 	// --------------------------------------------
 	// INPUT SETTINGS
@@ -242,19 +242,15 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     boolean playerHitsGround;
 
     private void loadPlayer() {
-	System.out.println("loadPlayer");
-	playerModel = ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mide.g3db");
-	System.out.println("loadPlayer instance player");
-	player = new KinematicCharacter(playerModel, "player", -15, 0, -15);
-	System.out.println("loadPlayer init cam");
+	playerModel = ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
+	
+	player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
 	player.initCamera(screenWidth, screenHeight);
-	System.out.println("loadPlayer add ghost");
-	dynamicsWorld.addCollisionObject(player.ghost, (short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
-		(short) (btBroadphaseProxy.CollisionFilterGroups.StaticFilter
-			| btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
-	System.out.println("loadPlayer add actiobn");
+	dynamicsWorld.addCollisionObject(player.ghost, 
+		(short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
+		(short)(btBroadphaseProxy.CollisionFilterGroups.StaticFilter
+		      | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
 	dynamicsWorld.addAction(player.charControl);
-	System.out.println("loadPlayer done");
     }
 
     // --------------------------------------------------------------------------------------------------
@@ -268,7 +264,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// create some boxes to collide
 	for (int i = 0; i < 15; i++) {
 	    for (int j = 0; j < 5; j++) {
-		dynamicsWorld.addRigidBody(map.create("models/maps/test/box4.g3db", i * 2, j * 2, 0, 50f).getBody());
+		//dynamicsWorld.addRigidBody(map.create("models/maps/simple_terrain/obstacles/box4.g3db", i * 2, j * 2, 0, 50f).getBody());
 	    }
 	}
 	System.out.println("loadMapObjectsAndItems done");
@@ -277,7 +273,14 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void loadMap() {
 	System.out.println("loadMap");
 	map = new WorldMap();
-	btRigidBody ground = map.createTerrain("models/maps/easy/preview/preview_city.g3db").getBody();
+	
+	
+	
+	btRigidBody ground = 
+		//map.createTerrain("models/maps/easy/models/city_ground.g3db").getBody();
+		//map.createTerrain("models/maps/simple_terrain/simple_terrain.g3db").getBody();
+		map.createTerrain("ground", 50f,1f, 50f, new Vector3(0,0,0), Color.BLUE).getBody();
+		//map.createTerrain("models/maps/easy/preview/preview_city.g3db").getBody();
 
 	dynamicsWorld.addRigidBody(ground);
 	ground.setFriction(650); // TODO make friction compatible with our
@@ -315,7 +318,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	constraintSolver = new btSequentialImpulseConstraintSolver();
 	contactListener = new MyContactListener();
 	dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, constraintSolver, collisionConfig);
-	dynamicsWorld.setGravity(new Vector3(0, -10f, 0));
+	dynamicsWorld.setGravity(new Vector3(0, -9.81f, 0));
 
 	// debug
 	debugDrawer = new DebugDrawer();
@@ -410,6 +413,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
 	// POST WORLDSTEP
 	player.update(deltaTime);
+	
     }
 
     private void renderOffScreen() {
@@ -547,11 +551,6 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	    }
 	}
 
-	// OPEN ITEM MENU
-	if (keycode == Input.Keys.Q) {
-
-	}
-
 	if (!cursorCatched) {
 	    resetPlayerMovements();
 	    return false;
@@ -596,7 +595,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	}
 
 	if (keycode == Input.Keys.E) {
-	    this.worldSpeed = 0.3f;
+	    this.worldSpeed = 0f;
 	    return true;
 	}
 
@@ -660,36 +659,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 	if (!cursorCatched)
 	    return false;
-	shoot(screenX, screenY);
 	return true;
-    }
-
-    final short[] excludes = { CollisionDefs.GROUND_FLAG, CollisionDefs.PLAYER_FLAG, CollisionDefs.WALL_FLAG };
-
-    public void shoot(int screenX, int screenY) {
-
-	if (!player.shootWeapon())
-	    return;
-	Ray ray = player.camera.getPickRay(screenWidth / 2, screenHeight / 2);
-	btCollisionObject target;
-	if (player.currentCameraMode == player.CAMERA_MODE_FIRST)
-	    target = CollisionUtils.rayTestClosestSingle(dynamicsWorld, ray);
-	else {
-	    target = CollisionUtils.rayTestClosestAll(dynamicsWorld, ray, excludes);
-	    throw new Error("not yet implemented");
-	}
-
-	if (target != null && !player.isCollisionTarget(target)) {
-	    System.out.println(target.getUserValue());
-	    if (target.getCollisionFlags() != CollisionDefs.GROUND_FLAG) {
-		System.out.println(target);
-		btRigidBody body = (btRigidBody) target;
-		body.activate();
-		body.applyCentralForce(ray.direction.scl(50000)); // apply 50000
-								  // force into
-								  // shoot dir
-	    }
-	}
     }
 
     @Override

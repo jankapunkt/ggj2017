@@ -5,8 +5,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.model.Node;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
@@ -39,13 +43,22 @@ public class WorldMap {
     }
 
     public MapPart createTerrain(Model model, String id) {
+	return new MapPart(model, new Vector3(0, 0, 0));
+    }
+
+    public MapPart createTerrain(Model model, String id, Vector3 pos) {
 	models.put(id, model);
-	MapPart currentMapInstance = new MapPart(model, new Vector3(0, -10, 0));
+	MapPart currentMapInstance = new MapPart(model, pos);
 	bodyConstructionInfo.put(id, currentMapInstance.constructionInfo);
 	instances.add(currentMapInstance);
 	System.out.println("[Map]: models=" + models.size() + " instances=" + instances.size() + " rigidbodyInfos="
 		+ bodyConstructionInfo.size());
 	return currentMapInstance;
+    }
+
+    public MapPart createTerrain(String id, float width, float height, float depth, Vector3 pos, Color col) {
+	Model model = ModelFactory.getGround(width, height, depth, col);
+	return createTerrain(model, id, pos);
     }
 
     protected MapPart createMapObject(String g3dbPath, float x, float y, float z, float mass) {
@@ -90,7 +103,7 @@ public class WorldMap {
 	models.clear();
 	instances.clear();
     }
-    
+
     public List<? extends GameModelInstance> getRenderingInstances() {
 	return this.instances;
     }
