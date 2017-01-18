@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
@@ -22,6 +23,7 @@ public class WorldMap {
     public final HashMap<String, btRigidBody.btRigidBodyConstructionInfo> bodyConstructionInfo = new HashMap<String, btRigidBody.btRigidBodyConstructionInfo>();
     public final ArrayList<MapPart> instances = new ArrayList<MapPart>();
 
+    
     public WorldMap() {
     }
 
@@ -57,7 +59,10 @@ public class WorldMap {
     }
 
     public MapPart createTerrain(String id, float width, float height, float depth, Vector3 pos, Color col) {
-	Model model = ModelFactory.getGround(width, height, depth, col);
+	Model model = models.get(id);
+	if (model == null)
+	    model = ModelFactory.getGround(width, height, depth, col);
+	
 	return createTerrain(model, id, pos);
     }
 
@@ -87,13 +92,13 @@ public class WorldMap {
 	    return null;
 	return instances.get(0);
     }
-
-    public void print() {
+    
+    public void update(Vector3 playerPos, float playerSpeed) {
+	//TODO remove objects behind player position here
+	
+	//TODO activate objects at a certain distance for collision detection
     }
-
-    protected void printNode(Node node) {
-    }
-
+    
     public void dispose() {
 	Collection<Model> mods = models.values();
 	for (Model m : mods)

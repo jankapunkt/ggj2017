@@ -16,6 +16,8 @@ import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Shader;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
@@ -47,14 +49,17 @@ import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionUtils;
 import com.jankuester.ggj.twentyseventeen.graphics.rendering.EntityRenderingHelper;
 import com.jankuester.ggj.twentyseventeen.graphics.shader.ColorShader;
+import com.jankuester.ggj.twentyseventeen.models.characters.CharacterState;
+import com.jankuester.ggj.twentyseventeen.models.characters.ICharacterListener;
 import com.jankuester.ggj.twentyseventeen.models.characters.KinematicCharacter;
+import com.jankuester.ggj.twentyseventeen.models.characters.RigidCharacter;
 import com.jankuester.ggj.twentyseventeen.models.entities.EntityManager;
 import com.jankuester.ggj.twentyseventeen.models.maps.Sun;
 import com.jankuester.ggj.twentyseventeen.models.maps.WorldMap;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
-public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuListener {
+public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuListener, ICharacterListener {
 
     public GameScreen() {
 	entityManager = new EntityManager();
@@ -119,7 +124,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// LOAD ENVIRONMENT
 	// --------------------------------------------
 	loadEnvironment();
-	
+
 	// --------------------------------------------
 	// LOAD BULLET BEFORE MODELS
 	// --------------------------------------------
@@ -221,13 +226,11 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private void loadEnvironment() {
 	System.out.println("loadEnvironment");
-	// sun = Sun.createSun(-4, -2, -4, Color.WHITE, 50);
+
 	environment = new Environment();
-	// environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.6f,
-	// 0.6f, 0.6f, 1f));
-	// environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f,
-	// -0.8f, -0.2f));
-	// environment.add(sun.getLight());
+	environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1f));
+	environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+
 	environment.add(Sun.createSun(0, 200, 0, Color.WHITE, 20000).getLight());
 	System.out.println("loadEnvironment done");
     }
@@ -236,7 +239,8 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     // CREATE PLAYER
     // --------------------------------------------------------------------------------------------------
 
-    public KinematicCharacter player;
+    //public KinematicCharacter player;
+    RigidCharacter player;
     private Model playerModel;
     public Vector3 playerPos;
     boolean playerHitsGround;
@@ -244,13 +248,29 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void loadPlayer() {
 	playerModel = ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
 	
-	player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
+	//player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
+	player = new RigidCharacter(playerModel, "player", 0,1,0);
 	player.initCamera(screenWidth, screenHeight);
+	
+	//player.setVehicleAgility(vehicleAgility);
+	//player.setShield(vehicleShield);
+	//player.setVehicleSpeed(vehicleSpeed);
+	
+	//player.addListener(this);
+	
+	/*
 	dynamicsWorld.addCollisionObject(player.ghost, 
 		(short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
-		(short)(btBroadphaseProxy.CollisionFilterGroups.StaticFilter
-		      | btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
+		(short) (btBroadphaseProxy.CollisionFilterGroups.StaticFilter
+			| btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
 	dynamicsWorld.addAction(player.charControl);
+	*/
+	
+	dynamicsWorld.addCollisionObject(player.getBody());
+    }
+    
+    public void characterStateChanged(CharacterState cstate){
+	System.out.println(cstate.toString());
     }
 
     // --------------------------------------------------------------------------------------------------
@@ -262,10 +282,16 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void loadMapObjectsAndItems() {
 	System.out.println("loadMapObjectsAndItems");
 	// create some boxes to collide
-	for (int i = 0; i < 15; i++) {
-	    for (int j = 0; j < 5; j++) {
-		//dynamicsWorld.addRigidBody(map.create("models/maps/simple_terrain/obstacles/box4.g3db", i * 2, j * 2, 0, 50f).getBody());
-	    }
+	for (int i = 0; i < 5; i++) {
+	    btRigidBody box = map.create("models/maps/simple_terrain/obstacles/box4.g3db", -20 + i * 2,10, -200, 1f).getBody();
+	    //box.setMassProps(1, Vector3.Zero);
+	    //box.setContactCallbackFlag(CollisionDefs.OBJECT_FLAG);
+	    //box.setContactCallbackFilter(0);
+	    box.setCollisionFlags(box.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+	    box.setContactCallbackFlag(CollisionDefs.OBJECT_FLAG);
+	    box.setContactCallbackFilter(CollisionDefs.PLAYER_FLAG);
+	    box.setUserValue(CollisionDefs.generateUserValue());
+	    dynamicsWorld.addRigidBody(box);	    
 	}
 	System.out.println("loadMapObjectsAndItems done");
     }
@@ -273,20 +299,16 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void loadMap() {
 	System.out.println("loadMap");
 	map = new WorldMap();
-	
-	
-	
-	btRigidBody ground = 
-		//map.createTerrain("models/maps/easy/models/city_ground.g3db").getBody();
-		//map.createTerrain("models/maps/simple_terrain/simple_terrain.g3db").getBody();
-		map.createTerrain("ground", 50f,1f, 50f, new Vector3(0,0,0), Color.BLUE).getBody();
-		//map.createTerrain("models/maps/easy/preview/preview_city.g3db").getBody();
 
-	dynamicsWorld.addRigidBody(ground);
-	ground.setFriction(650); // TODO make friction compatible with our
-				 // vehicle speed/agility and so on
-	ground.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
-	ground.setContactCallbackFilter(0);
+	for (int i = 0; i < 10; i++) {
+	    btRigidBody ground = map.createTerrain("ground", 100f, 1f, 50f, new Vector3(0, 0, -i*50), Color.BLUE).getBody();
+	    dynamicsWorld.addRigidBody(ground);
+	    //ground.setFriction(1); // TODO make friction compatible with our vehicle speed
+	   
+	    ground.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	    ground.setContactCallbackFilter(0);
+	}
+
 	System.out.println("loadMap done");
     }
 
@@ -413,7 +435,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
 	// POST WORLDSTEP
 	player.update(deltaTime);
-	
+
     }
 
     private void renderOffScreen() {
@@ -446,8 +468,8 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     @Override
     public void resize(int width, int height) {
-	// TODO Auto-generated method stub
-
+	super.resize(width, height);
+	player.camera.update();
     }
 
     @Override
@@ -512,9 +534,18 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	public void onContactStarted(btPersistentManifold manifold, boolean match0, boolean match1) {
 	    int id0 = manifold.getBody0().getUserValue();
 	    int id1 = manifold.getBody1().getUserValue();
-	    int playerval = player.ghost.getUserValue();
+	    //int playerval = player.ghost.getUserValue();
+	    int playerval = player.getBody().getUserValue();
 	    int callbackid;
 
+	    System.out.println("contact started");
+	    System.out.println(id0);
+	    System.out.println(id1);
+	    System.out.println(manifold.getBody0().getContactCallbackFlag());
+	    System.out.println(manifold.getBody1().getContactCallbackFlag());
+	    System.out.println(match0);
+	    System.out.println(match1);
+	    
 	    if (match0 && id0 == playerval) {
 		callbackid = manifold.getBody1().getContactCallbackFlag();
 	    } else if (match1 && id1 == playerval) {
@@ -523,8 +554,12 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 		return;
 	    }
 
-	    if (callbackid == CollisionDefs.WEAPON_FLAG) {
-		// TODO add weapons if desired
+	    if (callbackid == CollisionDefs.OBJECT_FLAG) {
+		System.out.println("object touched");
+	    }
+	    
+	    if (callbackid == CollisionDefs.WEAPON_FLAG){
+		System.out.println("weapon touched");
 	    }
 	}
     }
@@ -557,7 +592,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	}
 
 	if (keycode == Input.Keys.SHIFT_LEFT) {
-	    player.setShiftDown(true);
+	    //player.setShiftDown(true);
 	    return true;
 	}
 
@@ -590,7 +625,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	    return true;
 	}
 	if (keycode == Input.Keys.C) {
-	    player.switchCameraMode();
+	    //player.switchCameraMode();
 	    return true;
 	}
 
@@ -603,7 +638,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     }
 
     private void resetPlayerMovements() {
-	player.setShiftDown(false);
+	//player.setShiftDown(false);
 	player.setJumpMove(false);
 	player.setLeftMove(false);
 	player.setRightMove(false);
@@ -617,7 +652,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	    return false;
 
 	if (keycode == Input.Keys.SHIFT_LEFT) {
-	    player.setShiftDown(false);
+	    //player.setShiftDown(false);
 	    return true;
 	}
 
@@ -676,7 +711,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     @Override
     public boolean mouseMoved(int screenX, int screenY) {
-	mouseMove(screenX, screenY);
+	//mouseMove(screenX, screenY);
 	return true;
     }
 
@@ -718,3 +753,4 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     }
 
 }
+

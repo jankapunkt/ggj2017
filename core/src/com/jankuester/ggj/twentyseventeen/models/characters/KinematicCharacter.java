@@ -78,9 +78,9 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	super(model);
 
 	this.id = id;
-	mass = 75f;
+	mass = 875f;
 
-	currentCameraMode = CAMERA_MODE_FIRST;
+	currentCameraMode = CAMERA_MODE_THIRD;
 
 	// initial positio = spawn place
 	position.set(x, y, z);
@@ -93,27 +93,31 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
 	// playerColShape = new btCapsuleShape(0.5f, 2f); //for less computation
 	playerColShape.calculateLocalInertia(mass, localInertia);
-
+	
 	// ------------------------------------
 	// init ghost object
 	// this is the invisible
 	// collision object
 	ghost = new btPairCachingGhostObject();
 	ghost.setWorldTransform(this.transform);
-
+	
 	ghost.setUserValue(10101010);
 	ghost.setCollisionShape(playerColShape);
 
-	ghost.setCollisionFlags(ghost.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT);
-	ghost.setContactCallbackFilter(CollisionDefs.WEAPON_FLAG);
+	ghost.setCollisionFlags(ghost.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+	ghost.setContactCallbackFilter(CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG);
 	ghost.setContactCallbackFlag(CollisionDefs.PLAYER_FLAG);
 
+	ghost.setFriction(0);
+	
+	
 	// ------------------------------------
 	// init char control
 	// this is the controller
 	// for transform and stuff
 	charControl = new btKinematicCharacterController(ghost, playerColShape, .00001f);
 	charControl.setUseGhostSweepTest(false);
+	
 	charControl.setUp(Vector3.Y);//setUpAxis(1); // y-UP
 	charControl.setMaxJumpHeight(5.5f);
 	charControl.setJumpSpeed(20);
@@ -137,11 +141,48 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     // =====================================================================================================//
     //
     //
+    // SHIELD AND SPEED
+    //
+    //
+    // =====================================================================================================//
+
+    private float maxVelocity= 0;
+    private float agility =0;
+    
+    public void setVehicleAgility(int value){
+	agility=value/100;
+    }
+    
+    public void setVehicleSpeed(int value){
+	maxVelocity = value/100;
+    }
+    
+   
+    private int maxShield=0;
+    
+    public void setShield(int value){
+	currentShield = maxShield = value; 
+    }
+    
+    private int currentShield=0;
+    
+    public float getShield(){
+	return currentShield/maxShield*100;
+    }
+    
+    public float getSpeed(){
+	return this.velocity.z * 50;
+    }
+    
+    // =====================================================================================================//
+    //
+    //
     // MODEL INSTANCE RELATED METHODS
     //
     //
     // =====================================================================================================//
 
+    
     public boolean isCollisionTarget(btCollisionObject toCompare) {
 	return toCompare != null && toCompare.equals(ghost);
     }
@@ -237,7 +278,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	}
 	if (currentCameraMode == CAMERA_MODE_THIRD) {
 	    camera.position.set(this.position.x, this.position.y + 2, this.position.z);
-	    camera.lookAt(this.position.x, this.position.y, this.position.z);
+	    camera.lookAt(this.position.x, this.position.y + 2, this.position.z);
 	}
 
 	camera.near = 0.1f;
@@ -313,6 +354,8 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     //
     //
     // =====================================================================================================//
+    public final Vector3 velocity = new Vector3();
+    
     /** translation vector **/
     public final Vector3 transl = new Vector3();
 
@@ -390,16 +433,18 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	if (isMoving) // finally apply
 	{
 	    if (shiftDown)
-		transl.limit(0.3f);
+		transl.limit(0.0001f);
+	    else if (leftMove || rightMove)
+		transl.limit(0.01f);
 	    else
-		transl.limit(0.12f);
-
-	    charControl.setWalkDirection(transl);
-	    if (!soundWalkIsPlaying) {
-		// playSound(SOUNDS_WALK);
-	    }
+		transl.limit(0.005f);
+	    
+	    //charControl.setWalkDirection(velocity.add(transl));
+	    charControl.setLinearVelocity(velocity.add(transl));
+	    if (forwardMove || backMove)
+		notifyListeners();
 	} else {
-	    charControl.setWalkDirection(Vector3.Zero);
+	    //charControl.setWalkDirection(Vector3.Zero);
 	    // stopSound(SOUNDS_WALK);
 	}
     }
@@ -535,21 +580,6 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     // =====================================================================================================//
     //
     //
-    // HEALTHSTATE
-    //
-    //
-    // =====================================================================================================//
-    protected int health = 100;
-    protected float virus = 0f;
-    protected int stamina = 100;
-
-    public HealthState getHealthState() {
-	return new HealthState(health, virus, stamina);
-    }
-
-    // =====================================================================================================//
-    //
-    //
     // WEAPONS AND ITEMS
     //
     //
@@ -598,6 +628,6 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     }
 
     public CharacterState getCharacterState() {
-	return new CharacterState(currentWeaponState, getHealthState(), transform.cpy());
+	return new CharacterState(getShield(), getSpeed());
     }
 }
