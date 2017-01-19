@@ -3,18 +3,25 @@
  */
 package com.jankuester.ggj.twentyseventeen.models.characters;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionShape;
+import com.badlogic.gdx.physics.bullet.collision.btSphereShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
+import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.bullet.ICollidable;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 
@@ -26,10 +33,8 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 
     // vectors
     public final Vector3 pos = new Vector3();
-    public Vector3 norm;
 
-    protected int jumpVel = 0;
-    protected final int MAX_JUMP = 4;
+    public final SpotLight light = new SpotLight();
 
     // collision
     protected btRigidBody.btRigidBodyConstructionInfo constructionInfo;
@@ -69,20 +74,27 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
      */
     public RigidCharacter(Model model, String id, float x, float y, float z) {
 	super(model);
-	this.mass = 5;
-	this.pos.set(x, y, z);
+	
+	model.materials.get(0).set(ColorAttribute.createDiffuse(Color.CORAL));
+	
+	this.mass = 1000f;
+	this.pos.set(x, 5, z);
 	this.transform.setTranslation(this.pos);
-	this.norm = new Vector3();
-
+	this.transform.rotate(Vector3.Y, 270);
+	this.light.setColor(Color.WHITE);
+	this.light.setIntensity(5000);
+	this.light.setPosition(this.pos.add(0, 0, -2));
+	
 	// ------- init collision stuff --------//
-	playerColShape = new btCapsuleShape(0.5f, 2f);
+	// playerColShape = 
+	playerColShape =  new btSphereShape(1f); //Bullet.obtainStaticNodeShape(model.nodes); //use when model is fixed
 	if (mass > 0f)
 	    playerColShape.calculateLocalInertia(mass, localInertia);
 	else
 	    localInertia.set(0, 0, 0);
 
 	this.constructionInfo = new btRigidBody.btRigidBodyConstructionInfo(mass, null, playerColShape, localInertia);
-	this.constructionInfo.setRestitution(0);
+	// this.constructionInfo.setRestitution(0);
 
 	playerMotionstate = new PlayerMotionState();
 	playerMotionstate.transform = this.transform;
@@ -92,12 +104,20 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	playerColObj.proceedToTransform(transform);
 	playerColObj.setUserValue(10101010);
 	playerColObj.setCollisionFlags(
-		playerColObj.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT);
-	//playerColObj.setSleepingThresholds(0, 0);
+		playerColObj.getCollisionFlags() | 
+		btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+	playerColObj.setContactCallbackFilter(
+		CollisionDefs.OBJECT_FLAG | 
+		CollisionDefs.WEAPON_FLAG | 
+		CollisionDefs.GROUND_FLAG |
+		CollisionDefs.WALL_FLAG |
+		CollisionDefs.ALL_FLAG);
+	playerColObj.setContactCallbackFlag(CollisionDefs.PLAYER_FLAG);
+	// playerColObj.setSleepingThresholds(0, 0);
 	playerColObj.setFriction(0);
-	
-	//playerColObj.setAngularFactor(0);
-	//playerColObj.setDamping(0, 0);
+
+	// playerColObj.setAngularFactor(0);
+	playerColObj.setDamping(0, 0);
     }
 
     public void dispose() {
@@ -146,6 +166,9 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 		-MathUtils.sin(MathUtils.degreesToRadians * angleAroundPlayer) * dist, 2,
 		-MathUtils.cos(MathUtils.degreesToRadians * angleAroundPlayer) * dist));
 	camera.update();
+	
+	light.setDirection(camera.direction.nor());
+	light.setPosition(camera.position.add(0, -1, -3));
     }
 
     public void rotateCamera(float dx, float dy, float delta) {
@@ -159,7 +182,7 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	angleAroundPlayer += anglex;
 	camera.rotateAround(camera.position, right, angley);
 	camera.rotate(Vector3.Y, anglex);
-	rotateCharacter(anglex, angley, delta);
+	//rotateCharacter(anglex, angley, delta);
 
     }
 
@@ -171,7 +194,6 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
     public final Vector3 transl = new Vector3();
     public final Vector3 buff = new Vector3();
     public final Vector3 vel = new Vector3();
-    
 
     /** updates body velocity **/
     public void updateMotion(float delta) {
@@ -183,40 +205,39 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	if (backMove && forwardMove)
 	    return;
 
-	// set current translation vector
-	transl.set(camera.direction.nor());
+	if (isMoving) {
+	    // wakeup
+	    if (!playerColObj.isActive())
+		playerColObj.activate();
+	    
+	    // set current translation vector
+	    transl.set(camera.direction.nor());
 
-	// prepare second buffer vector
-	if (leftMove || rightMove)
-	    buff.set(transl);
+	    // prepare second buffer vector
+	    if (leftMove || rightMove)
+		buff.set(transl);
 
-	transl.y = 0f; // we can't fly...
+	    transl.y = 0f; // we can't fly...
 
-	if (leftMove)
-	    transl.rotate(Vector3.Y, 90);
+	    if (leftMove)
+		transl.rotate(Vector3.Y, 90);
 
-	if (rightMove)
-	    transl.rotate(Vector3.Y, -90);
+	    if (rightMove)
+		transl.rotate(Vector3.Y, -90);
 
-	if (backMove && !leftMove && !rightMove)
-	    transl.set(transl.x * -1, transl.y * -1, transl.z * -1);
+	    if (backMove && !leftMove && !rightMove)
+		transl.set(transl.x * -1, transl.y * -1, transl.z * -1);
 
-	if (forwardMove && (leftMove || rightMove)) {
-	    transl.add(buff);
-	}
+	    if (forwardMove && (leftMove || rightMove)) {
+		transl.add(buff);
+	    }
 
-	if (backMove && (leftMove || rightMove)) {
-	    buff.set(buff.x * -1, buff.y * -1, buff.z * -1);
-	    transl.add(buff);
-	}
-
-	if (isMoving) // finally apply
-	{
-	    playerColObj.setLinearVelocity(vel.add(transl));
-	  
-	} else {
-	    // charControl.setWalkDirection(Vector3.Zero);
-	    // stopSound(SOUNDS_WALK);
+	    if (backMove && (leftMove || rightMove)) {
+		buff.set(buff.x * -1, buff.y * -1, buff.z * -1);
+		transl.add(buff);
+	    }
+	    //playerColObj.applyCentralForce(vel.add(transl));
+	    playerColObj.setLinearVelocity(vel.add(transl.scl(0.1f)));
 	}
     }
 
@@ -264,11 +285,13 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 
 	@Override
 	public void getWorldTransform(Matrix4 worldTrans) {
+	    //System.out.println("player:::getWorldTransform");
 	    worldTrans.set(transform);
 	}
 
 	@Override
 	public void setWorldTransform(Matrix4 worldTrans) {
+	   // System.out.println("player:::setworldTransform");
 	    transform.set(worldTrans);
 	}
     }

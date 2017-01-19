@@ -17,14 +17,18 @@ public class Sun extends GameModelInstance {
     public Vector3 position;
 
     public static Sun createSun(float x, float y, float z, Color color, float intensity) {
-	PointLightsAttribute pointLightAttribute = new PointLightsAttribute();
 	PointLight light = createPointLight(x,y,z,color,intensity);
-	pointLightAttribute.lights.add(light);
 	ModelBuilder mb = new ModelBuilder();
-	Model model = mb.createSphere(1, 1, 1, 5, 5,
-		new Material(ColorAttribute.createDiffuse(Color.YELLOW), pointLightAttribute),
+	Model model = mb.createSphere(0.1f, 0.1f, 0.1f, 5, 5,
+		new Material(ColorAttribute.createDiffuse(Color.YELLOW), getPointLightAttribute(light)),
 		Usage.Position | Usage.Normal);
 	return new Sun(model, new Vector3(x, y, z), light);
+    }
+    
+    public static PointLightsAttribute getPointLightAttribute(PointLight light){
+	PointLightsAttribute pointLightAttribute = new PointLightsAttribute();
+	pointLightAttribute.lights.add(light);
+	return pointLightAttribute;
     }
     
     public static PointLight createPointLight(float x, float y, float z, Color color, float intensity) {
@@ -49,5 +53,9 @@ public class Sun extends GameModelInstance {
 
     public PointLight getLight() {
 	return light;
+    }
+
+    public void update(Vector3 position2) {
+	this.transform.setTranslation(position2);
     }
 }
