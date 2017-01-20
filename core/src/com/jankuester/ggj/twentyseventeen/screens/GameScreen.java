@@ -17,9 +17,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
-import com.badlogic.gdx.graphics.g3d.environment.SpotLight;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
@@ -28,11 +26,9 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
 import com.badlogic.gdx.physics.bullet.collision.ContactListener;
-import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
@@ -47,16 +43,15 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
-import com.jankuester.ggj.twentyseventeen.bullet.CollisionUtils;
 import com.jankuester.ggj.twentyseventeen.graphics.rendering.EntityRenderingHelper;
 import com.jankuester.ggj.twentyseventeen.graphics.shader.ColorShader;
 import com.jankuester.ggj.twentyseventeen.models.characters.CharacterState;
 import com.jankuester.ggj.twentyseventeen.models.characters.ICharacterListener;
-import com.jankuester.ggj.twentyseventeen.models.characters.KinematicCharacter;
 import com.jankuester.ggj.twentyseventeen.models.characters.RigidCharacter;
 import com.jankuester.ggj.twentyseventeen.models.entities.EntityManager;
 import com.jankuester.ggj.twentyseventeen.models.maps.Sun;
 import com.jankuester.ggj.twentyseventeen.models.maps.WorldMap;
+import com.jankuester.ggj.twentyseventeen.models.utils.AttributeFactory;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
@@ -224,16 +219,18 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private Environment environment;
     private PointLight pointLight;
     private Sun sun;
+    
+   
 
     private void loadEnvironment() {
 	System.out.println("loadEnvironment");
 
-	sun = Sun.createSun(0, 130, 0, Color.GOLD, 50000);
+	sun = ModelFactory.createSun(0, 130, 0, Color.GOLD, 50000);
 	
 	environment = new Environment();
 	environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.01f, 0.01f, 0.01f, 1f));
 	//environment.add(new DirectionalLight().set(0.1f, 0.1f, 0.1f, -1f, -0.8f, -0.2f));
-	environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+	//environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 	environment.add(sun.getLight());
 	
 	System.out.println("loadEnvironment done");
@@ -251,6 +248,8 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private void loadPlayer() {
 	playerModel = ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
+	
+	playerModel = ModelFactory.getGround(1, 1, 1, Color.GREEN, AttributeFactory.getPointLightAttribute(sun.getLight()));
 	
 	//player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
 	player = new RigidCharacter(playerModel, "player", 0,1,0);
@@ -308,10 +307,10 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	map = new WorldMap();
 
 	for (int i = 0; i < 10; i++) {
-	    btRigidBody ground = map.createTerrain("ground", 100f, 1f, 50f, new Vector3(0, 0, -i*50), Color.BLUE).getBody();
+	    btRigidBody ground = map.createTerrain("ground", 100f, 1f, 50f, new Vector3(0, 0, -i*50), Color.BLUE, AttributeFactory.getPointLightAttribute(sun.getLight())).getBody();
 	    dynamicsWorld.addRigidBody(ground);
 	    
-	    environment.add(Sun.createPointLight(0, 20, -i*50, Color.GOLD, 1000f));
+	    environment.add(ModelFactory.createPointLight(0, 20, -i*50, Color.GOLD, 1000f));
 	    
 	    //ground.setFriction(1); // TODO make friction compatible with our vehicle speed
 	   

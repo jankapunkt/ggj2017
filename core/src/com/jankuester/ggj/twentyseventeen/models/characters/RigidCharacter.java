@@ -236,8 +236,11 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 		buff.set(buff.x * -1, buff.y * -1, buff.z * -1);
 		transl.add(buff);
 	    }
-	    //playerColObj.applyCentralForce(vel.add(transl));
-	    playerColObj.setLinearVelocity(vel.add(transl.scl(0.1f)));
+	    if (leftMove || rightMove)
+		playerColObj.setLinearVelocity(vel.add(transl.scl(3f))); //todo movwe fast left right withut much velocity forward.
+	    
+	    else
+		playerColObj.setLinearVelocity(vel.add(transl.scl(0.1f)));
 	}
     }
 

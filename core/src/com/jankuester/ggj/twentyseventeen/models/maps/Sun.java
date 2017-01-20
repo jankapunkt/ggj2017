@@ -16,24 +16,7 @@ public class Sun extends GameModelInstance {
     private PointLight light;
     public Vector3 position;
 
-    public static Sun createSun(float x, float y, float z, Color color, float intensity) {
-	PointLight light = createPointLight(x,y,z,color,intensity);
-	ModelBuilder mb = new ModelBuilder();
-	Model model = mb.createSphere(0.1f, 0.1f, 0.1f, 5, 5,
-		new Material(ColorAttribute.createDiffuse(Color.YELLOW), getPointLightAttribute(light)),
-		Usage.Position | Usage.Normal);
-	return new Sun(model, new Vector3(x, y, z), light);
-    }
     
-    public static PointLightsAttribute getPointLightAttribute(PointLight light){
-	PointLightsAttribute pointLightAttribute = new PointLightsAttribute();
-	pointLightAttribute.lights.add(light);
-	return pointLightAttribute;
-    }
-    
-    public static PointLight createPointLight(float x, float y, float z, Color color, float intensity) {
-	return new PointLight().set(color, new Vector3(x, y, z), intensity);
-    }
 
     public Sun(Model model, Vector3 pos, PointLight light) {
 	super(model, pos);

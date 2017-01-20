@@ -8,6 +8,8 @@ import java.util.Stack;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
+import com.badlogic.gdx.graphics.g3d.Attribute;
+import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.model.Node;
@@ -58,10 +60,10 @@ public class WorldMap {
 	return currentMapInstance;
     }
 
-    public MapPart createTerrain(String id, float width, float height, float depth, Vector3 pos, Color col) {
+    public MapPart createTerrain(String id, float width, float height, float depth, Vector3 pos, Color col, Attribute attribute) {
 	Model model = models.get(id);
 	if (model == null)
-	    model = ModelFactory.getGround(width, height, depth, col);
+	    model = ModelFactory.getGround(width, height, depth, col, attribute);
 	
 	return createTerrain(model, id, pos);
     }
