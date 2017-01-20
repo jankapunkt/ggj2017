@@ -26,17 +26,15 @@ public class ScreenComponentFactory {
 
     // FONTS
     public static final BitmapFont defaultFont = new BitmapFont();
-    public static final BitmapFont largeFont = createFont("fonts/XOLONIUM-REGULAR.OTF", Color.GREEN, Color.BLACK,
-	    Color.WHITE, 48);
-    public static final BitmapFont mediumFont = createFont("fonts/XOLONIUM-REGULAR.OTF", Color.GREEN, Color.BLACK,
-	    Color.WHITE, 28);
+    public static final BitmapFont largeFont = createFont("fonts/XOLONIUM-REGULAR.OTF", 48);
+    public static final BitmapFont mediumFont = createFont("fonts/XOLONIUM-REGULAR.OTF", 28);
 
     // DRWABLES
     public static final Drawable defaultBackground = createBackground(Color.WHITE, 0.7f, 200, 100);
 
     // UI ELEMENT STYLES
-    public static final TextButtonStyle defaultTextButtonStyle = createTextButtonStyle(largeFont, Color.BLACK,
-	    Color.GREEN, Color.GREEN, Color.DARK_GRAY);
+    public static final TextButtonStyle defaultTextButtonStyle = createTextButtonStyle(largeFont, Color.BLUE,
+	    Color.CYAN, Color.CYAN, Color.WHITE);
     public static final LabelStyle defaultLabelStyle = createLabelStyle(defaultFont, null);
 
     private static boolean initiated = false;
@@ -51,14 +49,13 @@ public class ScreenComponentFactory {
     //
     ////////////////////////////////////////////////////////////////////
 
-    public static BitmapFont createFont(String fontFilePath, Color fontColor, Color borderColor, Color shadowColor,
-	    int size) {
+    public static BitmapFont createFont(String fontFilePath, int size) {
 	FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal(fontFilePath));
 	FreeTypeFontParameter parameter = new FreeTypeFontParameter();
-	parameter.color = fontColor;
+	// parameter.color = fontColor;
 	parameter.size = size;
-	parameter.borderColor = borderColor;
-	parameter.shadowColor = shadowColor;
+	// parameter.borderColor = borderColor;
+	// parameter.shadowColor = shadowColor;
 	BitmapFont font = generator.generateFont(parameter);
 	generator.dispose();
 	return font;

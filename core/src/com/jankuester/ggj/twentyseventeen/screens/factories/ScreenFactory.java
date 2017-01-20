@@ -28,13 +28,9 @@ public class ScreenFactory {
 
     public static StartScreen createStartScreen(InputListener menuListener) {
 	StartScreen startScreen = new StartScreen();
-	Texture startBg = new Texture(Gdx.files.internal("images/bg_space.jpg"));
+	Texture startBg = new Texture(Gdx.files.internal("images/title_logo.png"));
 	startScreen.setBackgroundImage(startBg, false);
 	startScreen.addInputListener(menuListener);
-
-	// create big name
-	startScreen.addText(
-		ScreenComponentFactory.createLabel("GLOBAL GAME JAM 2017", ScreenComponentFactory.largeFont, null));
 
 	startScreen.addButton(
 		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "ARCADE MODE", 300, 200, 0, 0));
@@ -42,6 +38,9 @@ public class ScreenFactory {
 		ScreenComponentFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", 300, 200, 0, 0));
 	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.EXIT, "EXIT", 300, 200, 0, 0));
 	startScreen.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+	
+	startScreen.alignMenu(2);
+	
 	return startScreen;
     }
 
