@@ -15,6 +15,8 @@ public class GameModelInstance extends ModelInstance {
     public final float radius;
 
     private final static BoundingBox bounds = new BoundingBox();
+    
+    private String id="gameModelInstance_unsetId";
 
     public GameModelInstance(Model model) {
 	super(model);
@@ -52,4 +54,11 @@ public class GameModelInstance extends ModelInstance {
 	this.isSpheric = isSpheric;
     }
 
+    public String getId() {
+	return id;
+    }
+    
+    public void setId(String id) {
+	this.id = id;
+    }
 }

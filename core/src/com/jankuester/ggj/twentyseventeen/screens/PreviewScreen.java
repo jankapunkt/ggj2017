@@ -16,7 +16,7 @@ import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.jankuester.ggj.twentyseventeen.logic.ModelMap;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
-import com.jankuester.ggj.twentyseventeen.models.maps.Sun;
+import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 import com.jankuester.ggj.twentyseventeen.models.utils.ModelPreview;
 import com.jankuester.ggj.twentyseventeen.screens.actions.ScreenMenuActions;
 import com.jankuester.ggj.twentyseventeen.screens.components.ScreenMenuTextButton;

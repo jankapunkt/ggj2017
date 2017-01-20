@@ -75,7 +75,7 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
     public RigidCharacter(Model model, String id, float x, float y, float z) {
 	super(model);
 	
-	model.materials.get(0).set(ColorAttribute.createDiffuse(Color.CORAL));
+	//model.materials.get(0).set(ColorAttribute.createDiffuse(Color.CORAL));
 	
 	this.mass = 1000f;
 	this.pos.set(x, 5, z);
@@ -166,7 +166,7 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 		-MathUtils.sin(MathUtils.degreesToRadians * angleAroundPlayer) * dist, 2,
 		-MathUtils.cos(MathUtils.degreesToRadians * angleAroundPlayer) * dist));
 	camera.update();
-	
+	pos.set(transform.getTranslation(pos));
 	light.setDirection(camera.direction.nor());
 	light.setPosition(camera.position.add(0, -1, -3));
     }

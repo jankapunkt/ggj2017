@@ -71,13 +71,14 @@ public class EntityRenderingHelper {
 
     public void render(final List<? extends GameModelInstance> instances, final Environment environment, final Shader shader) {
 	for (GameModelInstance instance : instances) {
+	    System.out.println("render "+instance.getId());
 	    render(instance, environment, shader);
 	}
     }
     
     public void end() {
 	if (count != last_count) {
-	    System.out.println("rendered Objects: "+ count);
+	    //System.out.println("rendered Objects: "+ count);
 	    last_count = count;
 	}
 	
@@ -90,7 +91,10 @@ public class EntityRenderingHelper {
 	if (this.cam == null)
 	    return false;
 	instance.transform.getTranslation(tempPos);
+	
 	tempPos.add(instance.center);
+	if (tempPos.dst(cam.position) > cam.far)
+	    return false;
 	if (instance.isSpheric())
 	    return cam.frustum.sphereInFrustum(tempPos, instance.radius);
 	else
