@@ -20,33 +20,17 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
     public RaceCourse() {}
 
-    public RaceCourseObject create(String g3dbPath) {
-	return createMapObjectFromG3DBFile(g3dbPath, 0, 0, 0, 0);
-    }
-
-    public RaceCourseObject create(String g3dbPath, float mass) {
-	return createMapObjectFromG3DBFile(g3dbPath, 0, 0, 0, mass);
-    }
-
-    public RaceCourseObject create(String g3dbPath, float x, float y, float z, float mass) {
-	return createMapObjectFromG3DBFile(g3dbPath, x, y, z, mass);
-    }
-
-    public RaceCourseObject createTerrain(String path) {
+    public RaceCourseObject createExistingTerrain(String path, Vector3 pos) {
 	Model currentMap = ModelFactory.getG3DBModel(path);
-	return createTerrain(currentMap, path);
+	if (currentMap == null)
+	    return null;
+	return createTerrainWithCollisionBody(currentMap, path, pos);
     }
 
-    public RaceCourseObject createTerrain(Model model, String id) {
-	RaceCourseObject obj = new RaceCourseObject(model, new Vector3(0, 0, 0));
-	obj.setId(id);
-	return obj;
-    }
-
-    public RaceCourseObject createTerrain(String id, float width, float height, float depth, Vector3 pos, Color col, final Attribute... attribute) {
+    public RaceCourseObject createTerrain(String id, Vector3 dimensions, Vector3 pos, Color col, final Attribute... attribute) {
 	Model model = models.get(id);
 	if (model == null)
-	    model = ModelFactory.getBox(width, height, depth, col, attribute);
+	    model = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, col, attribute);
 	return createTerrainWithCollisionBody(model, id, pos);
     }
     
@@ -70,13 +54,6 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	}
 	return createCourseObjectWithCollisionBody(g3dbPath, x, y, z, mass, currentMap);
     }
-    
-    public RaceCourseObject createObstacle(String id, Vector3 dimensions, Vector3 position, float mass, final Attribute... attribute) {
-	Model currentModel = models.get(id);
-	if (currentModel == null)
-	    currentModel = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attribute);
-	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);
-    }
 
     private RaceCourseObject createCourseObjectWithCollisionBody(String id, float x, float y, float z, float mass, Model model) {
 	RaceCourseObject currentMapInstance = null;
@@ -93,7 +70,12 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	return currentMapInstance;
     }
 
-
+    public RaceCourseObject createObstacle(String id, Vector3 dimensions, Vector3 position, float mass, final Attribute... attribute) {
+	Model currentModel = models.get(id);
+	if (currentModel == null)
+	    currentModel = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attribute);
+	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);
+    }
     
     public RaceCourseObject getGround() {
 	if (instances == null || instances.size() == 0)

@@ -248,7 +248,8 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// playerModel =
 	// ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
 
-	playerModel = ModelFactory.getBox(1, 1, 1, Color.GREEN, pointLightAttribute, ColorAttribute.createSpecular(Color.BLUE));
+	playerModel = ModelFactory.getBox(2, 2, 2, Color.GREEN, pointLightAttribute,
+		ColorAttribute.createSpecular(Color.BLUE));
 
 	// player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
 	player = new RigidCharacter(playerModel, "player", 0, 1, 0);
@@ -280,20 +281,21 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     // CREATE MAP AND OBJECTS
     // --------------------------------------------------------------------------------------------------
 
-    private RaceCourse map;
+    private RaceCourse raceCourse;
 
     private void loadMapObjectsAndItems() {
 	System.out.println("loadMapObjectsAndItems");
 	// create some boxes to collide
 	for (int i = 0; i < 5; i++) {
 	    for (int j = 0; j < 5; j++) {
-
 		// map.create("models/maps/simple_terrain/obstacles/box4.g3db",
 		// -5 + i * 2, j * 2, -400, 5000f)
 		// .getBody();
-		RaceCourseObject boxModel = map.createObstacle("box", 
-			new Vector3(1,1,1), new Vector3(-5 + i * 2, j * 2, -10), 500f, pointLightAttribute);
+
+		RaceCourseObject boxModel = raceCourse.createObstacle("box", new Vector3(1, 1, 1),
+			new Vector3(-5 + i * 2, j * 2, -10), 500f, pointLightAttribute);
 		btRigidBody box = boxModel.getBody();
+
 		box.setCollisionFlags(
 			box.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
 		box.setContactCallbackFlag(CollisionDefs.OBJECT_FLAG);
@@ -307,15 +309,29 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private void loadMap() {
 	System.out.println("loadMap");
-	map = new RaceCourse();
+	raceCourse = new RaceCourse();
 
 	for (int i = 0; i < 10; i++) {
-	    btRigidBody groundBody = map
-		    .createTerrain("ground", 100f, 1f, 50f, new Vector3(0, 0, -i * 50), Color.BLUE, pointLightAttribute)
-		    .getBody();
+	    btRigidBody groundBody = raceCourse.createTerrain("ground", new Vector3(100f, 1f, 50f),
+		    new Vector3(0, 0, -i * 50), Color.BLUE, pointLightAttribute).getBody();
 	    dynamicsWorld.addRigidBody(groundBody);
 	    groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    groundBody.setContactCallbackFilter(0);
+	    
+	    btRigidBody wallLeftBody = raceCourse.createTerrain("wall_left", new Vector3(2f, 5f, 50f),
+		    new Vector3(-51, 0, -i * 50), Color.BLUE, pointLightAttribute).getBody();
+	    dynamicsWorld.addRigidBody(wallLeftBody);
+	    wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	    wallLeftBody.setContactCallbackFilter(0);
+	    
+	    
+	    btRigidBody wallRightBody = raceCourse.createTerrain("wallRight", new Vector3(2f, 5f, 50f),
+		    new Vector3(51, 0, -i * 50), Color.BLUE, pointLightAttribute).getBody();
+	    dynamicsWorld.addRigidBody(wallRightBody);
+	    wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	    wallRightBody.setContactCallbackFilter(0);
+	    
+	    
 	}
 
 	System.out.println("loadMap done");
@@ -466,7 +482,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void renderScene(Shader shader) {
 
 	entityRenderingHelper.begin(player.camera, modelBatch);
-	entityRenderingHelper.render(map.getRenderingInstances(), environment, shader);
+	entityRenderingHelper.render(raceCourse.getRenderingInstances(), environment, shader);
 	entityRenderingHelper.render(player, environment, shader);
 	entityRenderingHelper.render(sun, environment, shader);
 	entityRenderingHelper.end();
@@ -513,7 +529,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	pauseScreen.dispose();
 	screenBuffer.dispose();
 	fboScreenPause.dispose();
-	map.dispose();
+	raceCourse.dispose();
 	if (playerModel != null)
 	    playerModel.dispose();
 	if (contactListener != null)

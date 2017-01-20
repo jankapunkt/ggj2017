@@ -87,7 +87,7 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	
 	// ------- init collision stuff --------//
 	// playerColShape = 
-	playerColShape =  new btSphereShape(1f); //Bullet.obtainStaticNodeShape(model.nodes); //use when model is fixed
+	playerColShape =  new btBoxShape(new Vector3(1f,1f,1f));//new btSphereShape(1f); //Bullet.obtainStaticNodeShape(model.nodes); //use when model is fixed
 	if (mass > 0f)
 	    playerColShape.calculateLocalInertia(mass, localInertia);
 	else
