@@ -314,7 +314,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private void loadMap() {
 	System.out.println("loadMap");
-	raceCourse = new RaceCourse(64);
+	raceCourse = new RaceCourse(64, dynamicsWorld);
 	sceneObjects = new SceneObjectsManager();
 
 	updateMap(new Vector3(0, 0, 0));
@@ -327,43 +327,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	int mapSize = raceCourse.getMapSize();
 
 	for (int i = 0; i < 10; i++) {
-
-	    Phase phase = new Phase(raceCourse.getPhaseCount());
-	    
-	    Sun lightOrbLeft = ModelFactory.createSun(0, 6, -i * mapSize, Color.WHITE, 5000f);
-	    sceneObjects.addInstance(lightOrbLeft);
-
-	    Attributes atts = new Attributes();
-	    atts.set(ColorAttribute.createDiffuse(Color.GREEN),
-		    AttributeFactory.getPointLightAttribute(lightOrbLeft.getLight()));
-
-	    RaceCourseObject groundModel = raceCourse.createObstacle("ground", new Vector3(mapSize, 1f, mapSize),
-		    new Vector3(0, 0, -i * mapSize), 0, atts);
-	    
-	    //move this into creation
-	    btRigidBody groundBody = groundModel.getBody();
-	    groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
-	    groundBody.setContactCallbackFilter(0);
-	    dynamicsWorld.addRigidBody(groundBody);
-	    phase.phaseObjects.put(groundModel.getId(), groundModel);
-
-	    RaceCourseObject wallLeftModel = raceCourse.createTerrain("wall_left", new Vector3(2f, 5f, mapSize),
-		    new Vector3(-mapSize / 2 - 1, 0, -i * mapSize), Color.GREEN, atts);
-	    btRigidBody wallLeftBody = wallLeftModel.getBody();
-	    wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
-	    wallLeftBody.setContactCallbackFilter(0);
-	    dynamicsWorld.addRigidBody(wallLeftBody); //maybe we can later activate them to save computation
-	    phase.phaseObjects.put(wallLeftModel.getId(), wallLeftModel);
-
-	    RaceCourseObject wallRightModel = raceCourse.createTerrain("wallRight", new Vector3(2f, 5f, mapSize),
-		    new Vector3(mapSize / 2 + 1, 0, -i * mapSize), Color.GREEN, atts);
-	    btRigidBody wallRightBody = wallRightModel.getBody();
-	    wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
-	    wallRightBody.setContactCallbackFilter(0);
-	    dynamicsWorld.addRigidBody(wallRightBody);
-	    phase.phaseObjects.put(wallRightModel.getId(), wallRightModel);
-	    
-	    raceCourse.addPhase(phase);
+	    raceCourse.createPhase(i);
 	}
     }
 

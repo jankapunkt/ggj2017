@@ -8,10 +8,15 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Model;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Queue;
+import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
+import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
+import com.jankuester.ggj.twentyseventeen.models.factories.AttributeFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.models.managers.BaseModelInstanceManager;
 import com.jankuester.ggj.twentyseventeen.models.managers.IModelInstanceManager;
@@ -25,9 +30,12 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     private int instanceCount = 0;
     private int phaseCount = 0;
 
-    public RaceCourse(int mapSize) {
+    private final btDynamicsWorld dynamicsWorldRef;
+
+    public RaceCourse(int mapSize, final btDynamicsWorld dynamicsWorlfRef) {
 	this.mapSize = mapSize;
-	phaseQueue = new Queue<Phase>(10);
+	phaseQueue = new Queue<Phase>(16);
+	this.dynamicsWorldRef = dynamicsWorlfRef;
     }
 
     public int getMapSize() {
@@ -38,7 +46,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	if (instanceCount == Integer.MAX_VALUE) {
 	    instanceCount = 0;
 	}
-	return instanceCount;
+	return instanceCount++;
     }
 
     public int getPhaseCount() {
@@ -53,8 +61,65 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	if (z_rounded != currentPlayerPhase) {
 	    System.out.println("phase: " + z_rounded);
 	    currentPlayerPhase = z_rounded;
-
+	    if (phaseQueue.size > 0)
+		disposePhase(phaseQueue.removeFirst());
+	    createPhase(phaseCount);
 	}
+    }
+    
+    public void createPhase(int i){
+	Phase phase = new Phase(this.getPhaseCount());
+	    
+	    Sun lightOrbLeft = ModelFactory.createSun(0, 6, -i * mapSize, Color.WHITE, 5000f);
+
+	    Attributes atts = new Attributes();
+	    atts.set(ColorAttribute.createDiffuse(Color.GREEN),
+		    AttributeFactory.getPointLightAttribute(lightOrbLeft.getLight()));
+
+	    RaceCourseObject groundModel = this.createObstacle("ground", new Vector3(mapSize, 1f, mapSize),
+		    new Vector3(0, 0, -i * mapSize), 0, atts);
+	    
+	    //move this into creation
+	    btRigidBody groundBody = groundModel.getBody();
+	    groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	    groundBody.setContactCallbackFilter(0);
+	    dynamicsWorldRef.addRigidBody(groundBody);
+	    phase.phaseObjects.put(groundModel.getId(), groundModel);
+
+	    RaceCourseObject wallLeftModel = this.createTerrain("wall_left", new Vector3(2f, 5f, mapSize),
+		    new Vector3(-mapSize / 2 - 1, 0, -i * mapSize), Color.GREEN, atts);
+	    btRigidBody wallLeftBody = wallLeftModel.getBody();
+	    wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	    wallLeftBody.setContactCallbackFilter(0);
+	    dynamicsWorldRef.addRigidBody(wallLeftBody); //maybe we can later activate them to save computation
+	    phase.phaseObjects.put(wallLeftModel.getId(), wallLeftModel);
+
+	    RaceCourseObject wallRightModel = this.createTerrain("wallRight", new Vector3(2f, 5f, mapSize),
+		    new Vector3(mapSize / 2 + 1, 0, -i * mapSize), Color.GREEN, atts);
+	    btRigidBody wallRightBody = wallRightModel.getBody();
+	    wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	    wallRightBody.setContactCallbackFilter(0);
+	    dynamicsWorldRef.addRigidBody(wallRightBody);
+	    phase.phaseObjects.put(wallRightModel.getId(), wallRightModel);
+	    
+	    addPhase(phase);
+    }
+    
+    public void addPhase(Phase phase) {
+	phaseQueue.addLast(phase);
+	instances.addAll(phase.phaseObjects.values());
+	phaseCount++;
+    }
+
+    private void disposePhase(Phase phase) {
+	Collection<RaceCourseObject> phaseValues = phase.phaseObjects.values();
+	instances.removeAll(phaseValues);
+	for (RaceCourseObject raceCourseObject : phaseValues) {
+	    dynamicsWorldRef.removeRigidBody(raceCourseObject.getBody());
+	    raceCourseObject.dispose();
+	}
+	phase.phaseObjects.clear();
+	phase = null;
     }
 
     public void dispose() {
@@ -82,11 +147,6 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     //
     //
     //////////////////////////////////////////////////////////////////////////////////////////
-
-    public void addPhase(Phase phase) {
-	phaseQueue.addLast(phase);
-	instances.addAll(phase.phaseObjects.values());
-    }
 
     public RaceCourseObject createExistingTerrain(String path, Vector3 pos) {
 	Model currentMap = ModelFactory.getG3DBModel(path);
@@ -143,8 +203,9 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	    currentMapInstance = new RaceCourseObject(model, new Vector3(x, y, z), currentInfo);
 	}
 	currentMapInstance.setId(id + "_" + Integer.toString(this.getInstanceCount()));
-	//instances.add(currentMapInstance);
-	//System.out.println("[Map]: models=" + models.size() + " instances=" + instances.size() + " rigidbodyInfos="+ bodyConstructionInfo.size());
+	// instances.add(currentMapInstance);
+	// System.out.println("[Map]: models=" + models.size() + " instances=" +
+	// instances.size() + " rigidbodyInfos="+ bodyConstructionInfo.size());
 	return currentMapInstance;
     }
 
