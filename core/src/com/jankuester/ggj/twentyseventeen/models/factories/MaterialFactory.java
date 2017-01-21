@@ -14,11 +14,8 @@ public class MaterialFactory {
     private static final HashMap<String, Material> materials = new HashMap<String, Material>(16);
 
     public static Material createMaterial(String phaseName, Attributes attributes) {
-	Material mat = materials.get(phaseName);
-	if (mat == null) {
-	    mat = new Material();
-	    mat.set(attributes);
-	}
+	Material mat = new Material();
+	mat.set(attributes);
 	return mat;
     }
 
@@ -26,8 +23,8 @@ public class MaterialFactory {
 	Material mat = materials.get(id);
 	if (mat == null) {
 	    mat = new Material(ColorAttribute.createDiffuse(c));
-	    mat.set(attributes);
 	}
+	mat.set(attributes);
 	return mat;
     }
 
@@ -35,16 +32,8 @@ public class MaterialFactory {
 	Material mat = materials.get(id);
 	if (mat == null) {
 	    mat = new Material();
-	    mat.set(ca, pa);
 	}
-	return mat;
-    }
-
-    public static Material createMaterial(String id, final Attribute... attributes) {
-	Material mat = materials.get(id);
-	if (mat == null) {
-	    mat = new Material(attributes);
-	}
+	mat.set(ca, pa);
 	return mat;
     }
 

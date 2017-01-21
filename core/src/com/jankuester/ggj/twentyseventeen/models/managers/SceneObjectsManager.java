@@ -44,57 +44,56 @@ public class SceneObjectsManager extends BaseModelInstanceManager implements IMo
     public void createPhase(Phase phase, int phaseType, String phaseName, int index) {
 	Color phaseColor = Phase.getPhaseColor(phaseType, true);
 	phaseColor.a = 0.5f;
-	PointLight pl = ModelFactory.createPointLight(0, 26, index * mapSize / 2, Color.WHITE, 50f);
+	PointLight pl = ModelFactory.createPointLight(0, 6, index * mapSize - mapSize/2, Color.WHITE, 5000f);
 	Attributes attributes = new Attributes();
-	attributes.set(ColorAttribute.createDiffuse(phaseColor), AttributeFactory.getPointLightAttribute(pl));
+	attributes.set(ColorAttribute.createDiffuse(phaseColor),ColorAttribute.createSpecular(Color.WHITE),
+		ColorAttribute.createReflection(Color.WHITE),
+		AttributeFactory.getPointLightAttribute(pl));
 	Material sceneMaterial = MaterialFactory.createMaterial(phaseName, attributes);
 
-	int startZ = (index*mapSize);
+	int startZ = (index * mapSize);
 	int numLeft = Utils.random(minObjectsPerPhase, maxObjectsPerPhase);
 	int numRight = Utils.random(minObjectsPerPhase, maxObjectsPerPhase);
-	float sizeRight = mapSize/numRight;
-	float sizeLeft = mapSize/numLeft;
+	float sizeRight = mapSize / numRight;
+	float sizeLeft = mapSize / numLeft;
 	String indexName = Integer.toString(index);
-	
+
 	final Vector3 dimensions = new Vector3();
 	final Vector3 position = new Vector3();
-	
+
 	for (int i = 0; i < numLeft; i++) {
 	    int height = Utils.random(32, 64);
-	    dimensions.set(sizeLeft,height,sizeLeft);
-	    position.set(-mapSize - sizeLeft*2, 0, startZ + i*sizeLeft);
-	    SceneObject sceneObj = createSceneObject("scene_left" + Integer.toString(height), 
-		    phaseName,dimensions, position, sceneMaterial);
-	    String objId = "scene_left"+indexName;
+	    dimensions.set(sizeLeft, height, sizeLeft);
+	    position.set(-mapSize - sizeLeft * 2, 0, startZ + i * sizeLeft);
+	    SceneObject sceneObj = createSceneObject("scene_left" + Integer.toString(height), phaseName, dimensions,
+		    position, sceneMaterial);
+	    String objId = "scene_left" + indexName;
 	    sceneObj.setId(objId);
 	    phase.sceneObjects.put(objId, sceneObj);
 	    instances.add(sceneObj);
 	}
-	
+
 	for (int i = 0; i < numRight; i++) {
 	    int height = Utils.random(32, 64);
-	    dimensions.set(sizeRight,height,sizeRight);
-	    position.set(mapSize + sizeRight*2, 0, startZ + i*sizeRight);
-	    SceneObject sceneObj = createSceneObject("scene_left" + Integer.toString(height), 
-		    phaseName,dimensions, position, sceneMaterial);
-	    String objId = "scene_left"+indexName;
+	    dimensions.set(sizeRight, height, sizeRight);
+	    position.set(mapSize + sizeRight * 2, 0, startZ + i * sizeRight);
+	    SceneObject sceneObj = createSceneObject("scene_left" + Integer.toString(height), phaseName, dimensions,
+		    position, sceneMaterial);
+	    String objId = "scene_left" + indexName;
 	    sceneObj.setId(objId);
 	    phase.sceneObjects.put(objId, sceneObj);
 	    instances.add(sceneObj);
 	}
     }
-    
-    public void disposePhase(Phase phase){
+
+    public void disposePhase(Phase phase) {
 	instances.removeAll(phase.sceneObjects.values());
     }
 
-    public SceneObject createSceneObject(String id, String phaseName, Vector3 dimensions, Vector3 position, Material mat) {
+    public SceneObject createSceneObject(String id, String phaseName, Vector3 dimensions, Vector3 position,
+	    Material mat) {
 	String materialKey = id + phaseName;
-	Model currentModel = models.get(materialKey);
-	if (currentModel == null) {
-	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
-	    models.put(materialKey, currentModel);
-	}
+	Model currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
 	return new SceneObject(currentModel, position);
     }
 }

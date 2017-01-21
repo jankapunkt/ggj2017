@@ -33,7 +33,6 @@ import com.badlogic.gdx.physics.bullet.collision.ContactListener;
 import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
-import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.collision.btDbvtBroadphase;
 import com.badlogic.gdx.physics.bullet.collision.btDefaultCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btDispatcher;
@@ -41,7 +40,6 @@ import com.badlogic.gdx.physics.bullet.collision.btPersistentManifold;
 import com.badlogic.gdx.physics.bullet.dynamics.btConstraintSolver;
 import com.badlogic.gdx.physics.bullet.dynamics.btDiscreteDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
-import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
@@ -58,7 +56,6 @@ import com.jankuester.ggj.twentyseventeen.models.managers.IPhaseUpdateListener;
 import com.jankuester.ggj.twentyseventeen.models.managers.SceneObjectsManager;
 import com.jankuester.ggj.twentyseventeen.models.maps.Phase;
 import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourse;
-import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourseObject;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
 public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuListener, ICharacterListener, IPhaseUpdateListener {
@@ -221,21 +218,17 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private Environment environment;
     private Sun sun;
-    private Attributes sceneAttributes;
 
     private void loadEnvironment() {
 	System.out.println("loadEnvironment");
 
-	sceneAttributes = new Attributes();
-	sun = ModelFactory.createSun("sun", 0, 5, 0, Color.GREEN, 50);
+	sun = ModelFactory.createSun("sun", 0, 5, 0, Color.GOLD, 50);
 
 	environment = new Environment();
-	environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.41f, 0.41f, 0.41f, 1f));
-	environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+	//environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.41f, 0.41f, 0.41f, 1f));
+	//environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
 	System.out.println("loadEnvironment done");
-	sceneAttributes.set(ColorAttribute.createDiffuse(Color.GREEN),
-		AttributeFactory.getPointLightAttribute(sun.getLight()));
     }
 
     // --------------------------------------------------------------------------------------------------

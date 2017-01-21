@@ -90,6 +90,7 @@ public class RaceCourseObject extends GameModelInstance implements ICollidable {
 
     public void dispose() {
 	//if (colBody != null) colBody.dispose();
+	this.model.dispose();
     }
 
     public btRigidBody getBody() {

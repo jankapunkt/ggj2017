@@ -85,13 +85,13 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
 	Color phaseColor = Phase.getPhaseColor(phaseType, false);
 	phaseColor.a = 0.5f;
-	PointLight pl = ModelFactory.createPointLight(0, 6, index * mapSize, Color.WHITE, 500f);
+	PointLight pl = ModelFactory.createPointLight(0, 52, index * mapSize, Color.WHITE, 8000f);
 	Attributes attributes = new Attributes();
-	attributes.set(ColorAttribute.createDiffuse(phaseColor), AttributeFactory.getPointLightAttribute(pl));
-	Material groundMaterial = MaterialFactory.createMaterial(phasename, attributes);
+	attributes.set(ColorAttribute.createDiffuse(phaseColor), 
+		ColorAttribute.createSpecular(Color.WHITE), AttributeFactory.getPointLightAttribute(pl));
 
 	RaceCourseObject groundModel = this.createTerrain("ground", phasename, new Vector3(mapSize, 1f, mapSize),
-		new Vector3(0, 0, index * mapSize), groundMaterial);
+		new Vector3(0, 0, index * mapSize), MaterialFactory.createMaterial(phasename, attributes));
 	btRigidBody groundBody = groundModel.getBody();
 	groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	groundBody.setFriction(0);
@@ -104,7 +104,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	// WALL LEFT
 
 	RaceCourseObject wallLeftModel = this.createTerrain("wall_left", phasename, wallSize,
-		new Vector3(-mapSize / 2 - 1, 0, index * mapSize), groundMaterial);
+		new Vector3(-mapSize / 2 - 1, 0, index * mapSize), MaterialFactory.createMaterial(phasename, attributes));
 	btRigidBody wallLeftBody = wallLeftModel.getBody();
 	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_LEFT);
 	wallLeftBody.setContactCallbackFilter(0);
@@ -114,7 +114,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	// WALL RIGHT
 
 	RaceCourseObject wallRightModel = this.createTerrain("wallRight", phasename, wallSize,
-		new Vector3(mapSize / 2 + 1, 0, index * mapSize), groundMaterial);
+		new Vector3(mapSize / 2 + 1, 0, index * mapSize), MaterialFactory.createMaterial(phasename, attributes));
 	btRigidBody wallRightBody = wallRightModel.getBody();
 	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_RIGHT);
 	wallRightBody.setContactCallbackFilter(0);
@@ -228,15 +228,15 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
     public RaceCourseObject createTerrain(String id, String phaseName, Vector3 dimensions, Vector3 pos, Material mat) {
 	String materialKey = id + phaseName;
-	Model currentModel = models.get(materialKey);
+	/*Model currentModel = models.get(materialKey);
 	if (currentModel == null) {
 	    System.out.println("new terrain model => " + materialKey);
 	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
 	    if (currentModel == null)
 		throw new Error();
 	    models.put(materialKey, currentModel);
-	}
-
+	}*/
+	Model currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
 	return createTerrainWithCollisionBody(currentModel, id, pos);
     }
 

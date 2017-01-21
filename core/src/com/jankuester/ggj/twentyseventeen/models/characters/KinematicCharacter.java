@@ -445,15 +445,17 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
 	if (isMoving) // finally apply
 	{
-	    if (shiftDown)
-		transl.limit(0.0001f);
+
 	    else if (leftMove || rightMove)
-		transl.limit(0.01f);
+		transl.limit(5f);
 	    else
 		transl.limit(0.005f);
 	    
-	    velocity.add(transl).limit(20f);
-	    
+	    velocity.add(transl);
+	    if (shiftDown)
+		velocity.limit2(0.5f);
+	    else
+		velocity.limit2(5);
 	    charControl.setWalkDirection(velocity);
 	   // charControl.setLinearVelocity(velocity.add(transl));
 	} else {
