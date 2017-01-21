@@ -7,6 +7,7 @@ import java.util.List;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Attributes;
+import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
@@ -18,6 +19,7 @@ import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 import com.jankuester.ggj.twentyseventeen.models.factories.AttributeFactory;
+import com.jankuester.ggj.twentyseventeen.models.factories.MaterialFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.models.managers.BaseModelInstanceManager;
 import com.jankuester.ggj.twentyseventeen.models.managers.IModelInstanceManager;
@@ -61,47 +63,37 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     public void update(Vector3 playerPos, float playerSpeed) {
 	int z_rounded = Math.abs(Math.round(playerPos.z / mapSize));
 	if (z_rounded != currentPlayerPhase) {
-	    System.out.println("phase: " + z_rounded);
+	    // System.out.println("phase: " + z_rounded + " "+
+	    // phaseQueue.first().phaseId);
 	    currentPlayerPhase = z_rounded;
-	    if (phaseQueue.size > 0)
+	    if (phaseQueue.size > 0 && z_rounded > phaseQueue.first().phaseId + 1) {
 		disposePhase(phaseQueue.removeFirst());
+	    }
+
+	    if (z_rounded % 10 == 0) {
+		currentPhaseType =  (int) Math.round(Math.random() * 3);
+	    } 
 	    createPhase(phaseCount, currentPhaseType);
-	}
-	if (z_rounded % 5 == 0) {
-	    currentPhaseType = (int) Math.round(Math.random() * 3);
 	}
     }
 
     public void createPhase(int index, int phaseType) {
 	Phase phase = new Phase(this.getPhaseCount());
-	System.out.println("create phase: "+ phaseType);
-	Color phaseColor;
-	switch (phaseType) {
-	case Phase.TYPE_CLEAR:
-	    phaseColor = Color.ORANGE;
-	    break;
-	case Phase.TYPE_INNOCENTS:
-	    phaseColor = Color.PINK;
-	    break;
-	case Phase.TYPE_OBSTACLES:
-	    phaseColor = Color.RED;
-	    break;
-	case Phase.TYPE_SPEED:
-	    phaseColor = Color.GREEN;
-	    break;
-	default:
-	    throw new Error("unknown phase");
-	}
+	String phasename = Phase.getPhasename(phaseType);
 
-	PointLight pl = ModelFactory.createPointLight(0, 6, -index * mapSize, Color.WHITE, 5000f);
+	System.out.println("create phase: " + index + " => " + phaseType + " => " + phasename);
 
-	Attributes atts = new Attributes();
-	atts.set(ColorAttribute.createDiffuse(phaseColor), AttributeFactory.getPointLightAttribute(pl));
-
+	Color phaseColor = Phase.getPhaseColor(phaseType);
+	PointLight pl = ModelFactory.createPointLight(0, 6, index * mapSize, Color.WHITE, 5000f);
+	Attributes attributes = new Attributes();
+	attributes.set(ColorAttribute.createDiffuse(phaseColor), AttributeFactory.getPointLightAttribute(pl));
+	Material groundMaterial = MaterialFactory.createMaterial(phasename, attributes);
+	if (groundMaterial == null)
+	    throw new Error();
 	// GROUND
-	
-	RaceCourseObject groundModel = this.createObstacle("ground", new Vector3(mapSize, 1f, mapSize),
-		new Vector3(0, 0, -index * mapSize), 0, atts);
+
+	RaceCourseObject groundModel = this.createTerrain("ground", phasename, new Vector3(mapSize, 1f, mapSize),
+		new Vector3(0, 0, index * mapSize), groundMaterial);
 	btRigidBody groundBody = groundModel.getBody();
 	groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	groundBody.setFriction(0);
@@ -109,22 +101,24 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	dynamicsWorldRef.addRigidBody(groundBody);
 	phase.phaseObjects.put(groundModel.getId(), groundModel);
 
+	Vector3 wallSize = new Vector3(2f, 5f, mapSize);
+
 	// WALL LEFT
-	
-	RaceCourseObject wallLeftModel = this.createTerrain("wall_left", new Vector3(2f, 5f, mapSize),
-		new Vector3(-mapSize / 2 - 1, 0, -index * mapSize), phaseColor, atts);
+
+	RaceCourseObject wallLeftModel = this.createTerrain("wall_left", phasename, wallSize,
+		new Vector3(-mapSize / 2 - 1, 0, index * mapSize), groundMaterial);
 	btRigidBody wallLeftBody = wallLeftModel.getBody();
-	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_FLAG);
+	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_LEFT);
 	wallLeftBody.setContactCallbackFilter(0);
 	dynamicsWorldRef.addRigidBody(wallLeftBody);
 	phase.phaseObjects.put(wallLeftModel.getId(), wallLeftModel);
 
 	// WALL RIGHT
-	
-	RaceCourseObject wallRightModel = this.createTerrain("wallRight", new Vector3(2f, 5f, mapSize),
-		new Vector3(mapSize / 2 + 1, 0, -index * mapSize), phaseColor, atts);
+
+	RaceCourseObject wallRightModel = this.createTerrain("wallRight", phasename, wallSize,
+		new Vector3(mapSize / 2 + 1, 0, index * mapSize), groundMaterial);
 	btRigidBody wallRightBody = wallRightModel.getBody();
-	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_FLAG);
+	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_RIGHT);
 	wallRightBody.setContactCallbackFilter(0);
 	dynamicsWorldRef.addRigidBody(wallRightBody);
 	phase.phaseObjects.put(wallRightModel.getId(), wallRightModel);
@@ -133,9 +127,12 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     }
 
     public void addPhase(Phase phase) {
+	System.out.println("add phase " + phaseCount);
 	phaseQueue.addLast(phase);
 	instances.addAll(phase.phaseObjects.values());
 	phaseCount++;
+	System.out.println("[Map]: models=" + models.size() + " instances=" + instances.size() + " rigidbodyInfos="
+		+ bodyConstructionInfo.size());
     }
 
     private void disposePhase(Phase phase) {
@@ -175,49 +172,75 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     //
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    public RaceCourseObject createExistingTerrain(String path, Vector3 pos) {
+    public RaceCourseObject createTerrainFromG3DBModel(String path, Vector3 pos) {
 	Model currentMap = ModelFactory.getG3DBModel(path);
 	if (currentMap == null)
 	    return null;
 	return createTerrainWithCollisionBody(currentMap, path, pos);
     }
 
-    public RaceCourseObject createTerrain(String id, Vector3 dimensions, Vector3 pos, Color col,
+    public RaceCourseObject createTerrain(String id, String phaseName, Vector3 dimensions, Vector3 pos, Color col,
 	    Attributes attributes) {
-	Model currentModel = models.get(id);
+	String materialKey = id + phaseName;
+	Model currentModel = models.get(materialKey);
 	if (currentModel == null) {
-	    currentModel = ModelFactory.getBox(id, dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attributes);
-	    models.put(id, currentModel);
+	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z,
+		    Color.GREEN, attributes);
+	    models.put(materialKey, currentModel);
 	}
 
 	return createTerrainWithCollisionBody(currentModel, id, pos);
     }
 
-    public RaceCourseObject createTerrainWithCollisionBody(Model model, String id, Vector3 pos) {
-	RaceCourseObject currentMapInstance;
-	btRigidBody.btRigidBodyConstructionInfo currentInfo = bodyConstructionInfo.get(id);
-	if (currentInfo != null) {
-	    currentMapInstance = new RaceCourseObject(model, pos, currentInfo);
-	} else {
-	    currentMapInstance = new RaceCourseObject(model, pos, 0);
-	    bodyConstructionInfo.put(id, currentMapInstance.constructionInfo);
+    public RaceCourseObject createTerrain(String id, String phaseName, Vector3 dimensions, Vector3 pos, Material mat) {
+	String materialKey = id + phaseName;
+	Model currentModel = models.get(materialKey);
+	if (currentModel == null) {
+	    System.out.println("new terrain model => " + materialKey);
+	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
+	    if (currentModel == null)
+		throw new Error();
+	    models.put(materialKey, currentModel);
 	}
-	currentMapInstance.setId(id + "_" + Integer.toString(this.getInstanceCount()));
 
-	// instances.add(currentMapInstance);
-	// System.out.println("[Map]: models=" + models.size() + " instances=" +
-	// instances.size() + " rigidbodyInfos="+ bodyConstructionInfo.size());
-	return currentMapInstance;
+	return createTerrainWithCollisionBody(currentModel, id, pos);
     }
 
-    protected RaceCourseObject createMapObjectFromG3DBFile(String g3dbPath, float x, float y, float z, float mass) {
-	Model currentMap = models.get(g3dbPath);
+    protected RaceCourseObject createMapObjectFromG3DBFile(String g3dbPath, String phaseName, float x, float y, float z,
+	    float mass) {
+	String materialKey = g3dbPath + phaseName;
+	Model currentMap = models.get(materialKey);
 	if (currentMap == null) {
-	    currentMap = ModelFactory.getG3DBModel(g3dbPath);
-	    models.put(g3dbPath, currentMap);
+	    currentMap = ModelFactory.getG3DBModel(materialKey);
+	    models.put(materialKey, currentMap);
 	}
 	return createCourseObjectWithCollisionBody(g3dbPath, x, y, z, mass, currentMap);
     }
+
+    public RaceCourseObject createObstacle(String id, String phaseName, Vector3 dimensions, Vector3 position,
+	    float mass, Attributes attributes) {
+	String materialKey = id+phaseName;
+	Model currentModel = models.get(materialKey);
+	if (currentModel == null) {
+	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, Color.GREEN,
+		    attributes);
+	    models.put(materialKey, currentModel);
+	}
+	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);
+    }
+
+    public RaceCourseObject createObstacle(String id, String phaseName, Vector3 dimensions, Vector3 position,
+	    float mass, Material mat) {
+	String materialKey = id+phaseName;
+	Model currentModel = models.get(materialKey);
+	if (currentModel == null) {
+	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
+	    models.put(materialKey, currentModel);
+	}
+	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private RaceCourseObject createCourseObjectWithCollisionBody(String id, float x, float y, float z, float mass,
 	    Model model) {
@@ -230,19 +253,19 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	    currentMapInstance = new RaceCourseObject(model, new Vector3(x, y, z), currentInfo);
 	}
 	currentMapInstance.setId(id + "_" + Integer.toString(this.getInstanceCount()));
-	// instances.add(currentMapInstance);
-	// System.out.println("[Map]: models=" + models.size() + " instances=" +
-	// instances.size() + " rigidbodyInfos="+ bodyConstructionInfo.size());
 	return currentMapInstance;
     }
 
-    public RaceCourseObject createObstacle(String id, Vector3 dimensions, Vector3 position, float mass,
-	    Attributes attributes) {
-	Model currentModel = models.get(id);
-	if (currentModel == null) {
-	    currentModel = ModelFactory.getBox(id, dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attributes);
-	    models.put(id, currentModel);
+    public RaceCourseObject createTerrainWithCollisionBody(Model model, String id, Vector3 pos) {
+	RaceCourseObject currentMapInstance;
+	btRigidBody.btRigidBodyConstructionInfo currentInfo = bodyConstructionInfo.get(id);
+	if (currentInfo != null) {
+	    currentMapInstance = new RaceCourseObject(model, pos, currentInfo);
+	} else {
+	    currentMapInstance = new RaceCourseObject(model, pos, 0);
+	    bodyConstructionInfo.put(id, currentMapInstance.constructionInfo);
 	}
-	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);
+	currentMapInstance.setId(id + "_" + Integer.toString(this.getInstanceCount()));
+	return currentMapInstance;
     }
 }

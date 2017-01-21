@@ -6,7 +6,6 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -19,6 +18,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
@@ -30,6 +30,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.DebugDrawer;
 import com.badlogic.gdx.physics.bullet.collision.ContactListener;
+import com.badlogic.gdx.physics.bullet.collision.btBroadphaseProxy;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionConfiguration;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionDispatcher;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
@@ -48,9 +49,10 @@ import com.jankuester.ggj.twentyseventeen.graphics.rendering.EntityRenderingHelp
 import com.jankuester.ggj.twentyseventeen.graphics.shader.ColorShader;
 import com.jankuester.ggj.twentyseventeen.models.characters.CharacterState;
 import com.jankuester.ggj.twentyseventeen.models.characters.ICharacterListener;
-import com.jankuester.ggj.twentyseventeen.models.characters.RigidCharacter;
+import com.jankuester.ggj.twentyseventeen.models.characters.KinematicCharacter;
 import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 import com.jankuester.ggj.twentyseventeen.models.factories.AttributeFactory;
+import com.jankuester.ggj.twentyseventeen.models.factories.MaterialFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.models.managers.SceneObjectsManager;
 import com.jankuester.ggj.twentyseventeen.models.maps.Phase;
@@ -228,9 +230,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
 	environment = new Environment();
 	environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.41f, 0.41f, 0.41f, 1f));
-	// environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f,
-	// -0.8f, -0.2f)); //standard but lets remove it
-	// environment.add(sun.getLight());
+	environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
 
 	System.out.println("loadEnvironment done");
 	sceneAttributes.set(ColorAttribute.createDiffuse(Color.GREEN),
@@ -241,21 +241,24 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     // CREATE PLAYER
     // --------------------------------------------------------------------------------------------------
 
-    // public KinematicCharacter player;
-    RigidCharacter player;
+    public KinematicCharacter player;
+    // RigidCharacter player;
     private Model playerModel;
     public Vector3 playerPos;
     boolean playerHitsGround;
 
     private void loadPlayer() {
-	playerModel = ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
+	// playerModel =
+	// ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
 
 	// Attributes playerAttributes = new Attributes();
 	// playerModel = ModelFactory.getBox("box",2, 2, 2, Color.BLUE,
 	// sceneAttributes);
+	playerModel = ModelFactory.createSphereModel(1.2f, MaterialFactory.createMaterial("player",
+		ColorAttribute.createDiffuse(Color.GOLD), AttributeFactory.getPointLightAttribute(sun.getLight())));
 
-	// player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
-	player = new RigidCharacter(playerModel, "player", 0, 1, 0);
+	player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
+	// player = new RigidCharacter(playerModel, "player", 0, 1, 0);
 	player.initCamera(screenWidth, screenHeight);
 
 	// player.setVehicleAgility(vehicleAgility);
@@ -263,22 +266,19 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// player.setVehicleSpeed(vehicleSpeed);
 
 	player.addListener(this);
-	player.setMovingSound(Gdx.audio.newSound(Gdx.files.internal("audio/fx/velocity.mp3")));
+	// player.setMovingSound(Gdx.audio.newSound(Gdx.files.internal("audio/fx/velocity.mp3")));
 
-	/*
-	 * dynamicsWorld.addCollisionObject(player.ghost, (short)
-	 * btBroadphaseProxy.CollisionFilterGroups.CharacterFilter, (short)
-	 * (btBroadphaseProxy.CollisionFilterGroups.StaticFilter |
-	 * btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
-	 * dynamicsWorld.addAction(player.charControl);
-	 */
+	dynamicsWorld.addCollisionObject(player.ghost, (short) btBroadphaseProxy.CollisionFilterGroups.CharacterFilter,
+		(short) (btBroadphaseProxy.CollisionFilterGroups.StaticFilter
+			| btBroadphaseProxy.CollisionFilterGroups.DefaultFilter));
+	dynamicsWorld.addAction(player.charControl);
 
-	dynamicsWorld.addRigidBody(player.getBody());
-	environment.add(player.light);
+	// dynamicsWorld.addRigidBody(player.getBody());
+	// environment.add(player.light);
     }
 
     public void characterStateChanged(CharacterState cstate) {
-	System.out.println(cstate.toString());
+	// System.out.println(cstate.toString());
     }
 
     // --------------------------------------------------------------------------------------------------
@@ -296,17 +296,18 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 		// map.create("models/maps/simple_terrain/obstacles/box4.g3db",
 		// -5 + i * 2, j * 2, -400, 5000f)
 		// .getBody();
-
-		RaceCourseObject boxModel = raceCourse.createObstacle("box", new Vector3(1, 1, 1),
-			new Vector3(-5 + i * 2, j * 2, -10), 500f, sceneAttributes);
-		btRigidBody box = boxModel.getBody();
-
-		box.setCollisionFlags(
-			box.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
-		box.setContactCallbackFlag(CollisionDefs.OBJECT_FLAG);
-		box.setContactCallbackFilter(CollisionDefs.PLAYER_FLAG);
-		box.setUserValue(CollisionDefs.generateUserValue());
-		dynamicsWorld.addRigidBody(box);
+		/*
+		 * RaceCourseObject boxModel = raceCourse.createObstacle("box",
+		 * new Vector3(1, 1, 1), new Vector3(-5 + i * 2, j * 2, -10),
+		 * 500f, sceneAttributes); btRigidBody box = boxModel.getBody();
+		 * 
+		 * box.setCollisionFlags( box.getCollisionFlags() |
+		 * btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK)
+		 * ; box.setContactCallbackFlag(CollisionDefs.OBJECT_FLAG);
+		 * box.setContactCallbackFilter(CollisionDefs.PLAYER_FLAG);
+		 * box.setUserValue(CollisionDefs.generateUserValue());
+		 * dynamicsWorld.addRigidBody(box);
+		 */
 	    }
 	}
 	System.out.println("loadMapObjectsAndItems done");
@@ -317,18 +318,10 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	raceCourse = new RaceCourse(64, dynamicsWorld);
 	sceneObjects = new SceneObjectsManager();
 
-	updateMap(new Vector3(0, 0, 0));
-	System.out.println("loadMap done");
-    }
-
-    private void updateMap(Vector3 playerPos) {
-
-	//raceCourse.update(playerPos, 0);
-	int mapSize = raceCourse.getMapSize();
-
 	for (int i = 0; i < 10; i++) {
 	    raceCourse.createPhase(i, Phase.TYPE_CLEAR);
 	}
+	System.out.println("loadMap done");
     }
 
     // --------------------------------------------------------------------------------------------------
@@ -455,8 +448,8 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
 	// POST WORLDSTEP
 	player.update(deltaTime);
-	sun.update(player.pos.add(0, 2, -2));
-	raceCourse.update(player.pos, 0);
+	sun.update(player.position.add(0, 2, -2));
+	raceCourse.update(player.position, 0);
     }
 
     private void renderOffScreen() {
@@ -558,8 +551,8 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	public void onContactStarted(btPersistentManifold manifold, boolean match0, boolean match1) {
 	    int id0 = manifold.getBody0().getUserValue();
 	    int id1 = manifold.getBody1().getUserValue();
-	    // int playerval = player.ghost.getUserValue();
-	    int playerval = player.getBody().getUserValue();
+	    int playerval = player.ghost.getUserValue();
+	    // int playerval = player.getBody().getUserValue();
 	    int callbackid;
 
 	    if (match0 && id0 == playerval) {
@@ -570,16 +563,20 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 		return;
 	    }
 
-	    if (callbackid == (CollisionDefs.WALL_FLAG | CollisionDefs.GROUND_FLAG)) {
-		player.addForce(new Vector3(1,0,0), 20); //TODO make relative to collision angle
+	    if (callbackid == (CollisionDefs.WALL_LEFT | CollisionDefs.GROUND_FLAG)) {
+		player.addForce(new Vector3(1, 0, 0), 40);
 	    }
-	    
+
+	    if (callbackid == (CollisionDefs.WALL_RIGHT | CollisionDefs.GROUND_FLAG)) {
+		player.addForce(new Vector3(-1, 0, 0), 40);
+	    }
+
 	    if (callbackid == CollisionDefs.GROUND_FLAG) {
-		// System.out.println("ground touched");
+		player.hitsGround = true;
 	    }
 
 	    if (callbackid == CollisionDefs.OBJECT_FLAG) {
-		player.getBody().applyCentralForce(new Vector3(-40, 10, -7));
+		// TODO make damage
 	    }
 
 	    if (callbackid == CollisionDefs.WEAPON_FLAG) {

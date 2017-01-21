@@ -15,6 +15,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
@@ -89,8 +90,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	transform.rotate(Vector3.Y, 180);
 
 	// init capsule shape
-	playerColShape = new btSphereShape(1);
-
+	playerColShape = new btSphereShape(0.5f);
 	// playerColShape = new btCapsuleShape(0.5f, 2f); //for less computation
 	playerColShape.calculateLocalInertia(mass, localInertia);
 	
@@ -105,7 +105,9 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	ghost.setCollisionShape(playerColShape);
 
 	ghost.setCollisionFlags(ghost.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
-	ghost.setContactCallbackFilter(CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG);
+	ghost.setContactCallbackFilter(
+		CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG | CollisionDefs.GROUND_FLAG
+		| CollisionDefs.WALL_LEFT | CollisionDefs.WALL_RIGHT | CollisionDefs.ALL_FLAG);
 	ghost.setContactCallbackFlag(CollisionDefs.PLAYER_FLAG);
 
 	ghost.setFriction(0);
@@ -146,8 +148,8 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     //
     // =====================================================================================================//
 
-    private float maxVelocity= 0;
-    private float agility =0;
+    private float maxVelocity= 1;
+    private float agility =1;
     
     public void setVehicleAgility(int value){
 	agility=value/100;
@@ -158,7 +160,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     }
     
    
-    private int maxShield=0;
+    private int maxShield=1;
     
     public void setShield(int value){
 	currentShield = maxShield = value; 
@@ -244,7 +246,6 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
     public void setCamDistance(int amount) {
 	dist += amount;
-	System.out.println("dist: " + dist);
     }
 
     /**
@@ -273,7 +274,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
 	if (currentCameraMode == CAMERA_MODE_FIRST) {
 	    camera.position.set(this.position.x, this.position.y, this.position.z);
-	    // camera.position.rotate(Vector3.Y, -45);
+	    camera.position.rotate(Vector3.Y, -45);
 	    camera.lookAt(Vector3.Z);
 	}
 	if (currentCameraMode == CAMERA_MODE_THIRD) {
@@ -284,13 +285,18 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	camera.near = 0.1f;
 	camera.far = 400f;
     }
+    
+    
+    public void initialRotate(float delta) {
+	
+    }
 
     public void switchCameraMode() {
 	if (currentCameraMode == CAMERA_MODE_FIRST)
 	    currentCameraMode = CAMERA_MODE_THIRD;
 	else if (currentCameraMode == CAMERA_MODE_THIRD)
 	    currentCameraMode = CAMERA_MODE_FIRST;
-	System.out.println("[player]: switched camera to " + currentCameraMode);
+//	System.out.println("[player]: switched camera to " + currentCameraMode);
     }
 
     /**
@@ -343,6 +349,8 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 		    -MathUtils.sin(MathUtils.degreesToRadians * angleAroundPlayer) * dist, 2,
 		    -MathUtils.cos(MathUtils.degreesToRadians * angleAroundPlayer) * dist));
 	}
+	
+	position.set(transform.getTranslation(position));
 	camera.update();
 
     }
@@ -375,6 +383,11 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     protected void rotateCharacter(float anglex, float angley, float delta) {
 	this.transform.rotate(Vector3.Y, anglex);
 	this.ghost.setWorldTransform(transform);
+    }
+    
+    public void addForce(Vector3 forceDir, float strength) {
+	strength = strength / 100 * velocity.z;
+	charControl.setWalkDirection(forceDir.nor().scl(strength));
     }
 
     /**
@@ -439,10 +452,10 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	    else
 		transl.limit(0.005f);
 	    
-	    //charControl.setWalkDirection(velocity.add(transl));
-	    charControl.setLinearVelocity(velocity.add(transl));
-	    if (forwardMove || backMove)
-		notifyListeners();
+	    velocity.add(transl).limit(20f);
+	    
+	    charControl.setWalkDirection(velocity);
+	   // charControl.setLinearVelocity(velocity.add(transl));
 	} else {
 	    //charControl.setWalkDirection(Vector3.Zero);
 	    // stopSound(SOUNDS_WALK);

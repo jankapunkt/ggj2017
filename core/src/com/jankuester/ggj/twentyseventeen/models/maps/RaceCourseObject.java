@@ -89,8 +89,6 @@ public class RaceCourseObject extends GameModelInstance implements ICollidable {
     }
 
     public void dispose() {
-	if (motionState != null)motionState.dispose();
-	//if (colShape != null)colShape.dispose();
 	//if (colBody != null) colBody.dispose();
     }
 

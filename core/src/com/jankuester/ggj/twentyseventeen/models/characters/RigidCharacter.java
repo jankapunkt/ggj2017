@@ -87,15 +87,14 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	this.mass = 1000f;
 	this.pos.set(x, 5, z);
 	this.transform.setTranslation(this.pos);
-	this.transform.rotate(Vector3.Y, 270);
+	//this.transform.rotate(Vector3.Y, 270);
 	this.light.setColor(Color.WHITE);
 	this.light.setIntensity(5000);
 	this.light.setPosition(this.pos.add(0, 0, -2));
 
 	// ------- init collision stuff --------//
 	// playerColShape =
-	playerColShape = new btSphereShape(1.2f); //Bullet.obtainStaticNodeShape(model.nodes);
-	
+	playerColShape = new btSphereShape(1f); // Bullet.obtainStaticNodeShape(model.nodes);
 
 	if (mass > 0f)
 	    playerColShape.calculateLocalInertia(mass, localInertia);
@@ -114,8 +113,9 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	playerColObj.setUserValue(10101010);
 	playerColObj.setCollisionFlags(
 		playerColObj.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
-	playerColObj.setContactCallbackFilter(CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG
-		| CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_FLAG | CollisionDefs.ALL_FLAG);
+	playerColObj.setContactCallbackFilter(
+		CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG | CollisionDefs.GROUND_FLAG
+			| CollisionDefs.WALL_LEFT | CollisionDefs.WALL_RIGHT | CollisionDefs.ALL_FLAG);
 	playerColObj.setContactCallbackFlag(CollisionDefs.PLAYER_FLAG);
 	// playerColObj.setSleepingThresholds(0, 0);
 	playerColObj.setFriction(0);
@@ -169,14 +169,14 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 
     /** syncs cam pos with player pos **/
     protected void updateCamera() {
-	camera.position.set(transform.getTranslation(camera.position).add(0, 1, 0));
+	//camera.position.set(transform.getTranslation(camera.position).add(0, 1, 0));
 	camera.position.set(transform.getTranslation(camera.position).add(
 		-MathUtils.sin(MathUtils.degreesToRadians * angleAroundPlayer) * dist, 2,
 		-MathUtils.cos(MathUtils.degreesToRadians * angleAroundPlayer) * dist));
 	camera.update();
 	pos.set(transform.getTranslation(pos));
-	light.setDirection(camera.direction.nor());
-	light.setPosition(camera.position.add(0, -1, -3));
+	//light.setDirection(camera.direction.nor());
+	//light.setPosition(camera.position.add(0, -1, -3));
     }
 
     public void rotateCamera(float dx, float dy, float delta) {
@@ -206,13 +206,16 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
     private boolean movingSoundIsPlaying;
 
     private long movingSoundId;
-    
+
     public void addForce(Vector3 forceDir, float strength) {
+	strength = strength / 100 * vel.z;
 	this.vel.add(forceDir.nor().scl(strength));
     }
 
     /** updates body velocity **/
     public void updateMotion(float delta) {
+	if (!hitsGround)
+	    return;
 	isMoving = forwardMove || backMove || leftMove || rightMove;
 
 	// skip unwanted
@@ -242,17 +245,16 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 		transl.rotate(Vector3.Y, -90);
 
 	    if (backMove && !leftMove && !rightMove)
-		transl.set(transl.x * -1, transl.y * -1, transl.z * -1);
+		transl.set(transl.x * -1, 0, transl.z * -1);
 
 	    if (forwardMove && (leftMove || rightMove)) {
 		transl.add(buff);
 	    }
 
 	    if (backMove && (leftMove || rightMove)) {
-		buff.set(buff.x * -1, buff.y * -1, buff.z * -1);
+		buff.set(buff.x * -1, 0, buff.z * -1);
 		transl.add(buff);
 	    }
-
 	    playerColObj.setLinearVelocity(vel.add(transl.scl(0.1f)));
 	    if (forwardMove)
 		updateMovingSound(true);

@@ -25,6 +25,9 @@ import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
 import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 
 public class ModelFactory {
+    
+    private static final ModelBuilder modelBuilder = new ModelBuilder();
+    
     public static Model getG3DBModel(String g3dbPath) { // TODO throws
 							// exceptions and so on
 	UBJsonReader jsonReader = new UBJsonReader();
@@ -56,23 +59,32 @@ public class ModelFactory {
 	return m;
     }
 
-    public static Model getBox(String id, float w, float h, float d, Color c, Attributes attributes) {
-	ModelBuilder modelBuilder = new ModelBuilder();
+    public static Model createBoxModel(String id, float w, float h, float d, Color c, Attributes attributes) {
 	return modelBuilder.createBox(w, h, d, MaterialFactory.createMaterial(id, c, attributes),
+		Usage.Position | Usage.Normal);
+    }
+    
+    public static Model createBoxModel(String id, float width, float height, float depth, Material material) {
+	return modelBuilder.createBox(width, height, depth, material, 
 		Usage.Position | Usage.Normal);
     }
 
     public static Sun createSun(String id, float x, float y, float z, Color color, float intensity) {
 	PointLight light = createPointLight(x, y, z, color, intensity);
-	ModelBuilder mb = new ModelBuilder();
 	Attributes attributes = new Attributes();
 	attributes.set(AttributeFactory.getPointLightAttribute(light));
-	Model model = mb.createSphere(0.1f, 0.1f, 0.1f, 5, 5, MaterialFactory.createMaterial(id, color, attributes),
+	Model model = modelBuilder.createSphere(0.1f, 0.1f, 0.1f, 5, 5, 
+		MaterialFactory.createMaterial(id, color, attributes),
 		Usage.Position | Usage.Normal);
 	return new Sun(model, new Vector3(x, y, z), light);
     }
 
     public static PointLight createPointLight(float x, float y, float z, Color color, float intensity) {
 	return new PointLight().set(color, new Vector3(x, y, z), intensity);
+    }
+    
+    public static Model createSphereModel(float size, Material mat){
+	return modelBuilder.createSphere(size, size, size, 16, 16, mat, 
+		Usage.Position | Usage.Normal);
     }
 }
