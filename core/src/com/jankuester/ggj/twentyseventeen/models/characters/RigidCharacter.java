@@ -94,8 +94,8 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 
 	// ------- init collision stuff --------//
 	// playerColShape =
-	playerColShape = Bullet.obtainStaticNodeShape(model.nodes);
-	// btSphereShape(1.2f);
+	playerColShape = new btSphereShape(1.2f); //Bullet.obtainStaticNodeShape(model.nodes);
+	
 
 	if (mass > 0f)
 	    playerColShape.calculateLocalInertia(mass, localInertia);
@@ -206,6 +206,10 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
     private boolean movingSoundIsPlaying;
 
     private long movingSoundId;
+    
+    public void addForce(Vector3 forceDir, float strength) {
+	this.vel.add(forceDir.nor().scl(strength));
+    }
 
     /** updates body velocity **/
     public void updateMotion(float delta) {

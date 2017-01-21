@@ -227,8 +227,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	sun = ModelFactory.createSun("sun", 0, 5, 0, Color.GREEN, 50);
 
 	environment = new Environment();
-	// environment.set(new ColorAttribute(ColorAttribute.AmbientLight,
-	// 0.01f, 0.01f, 0.01f, 1f));
+	environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.41f, 0.41f, 0.41f, 1f));
 	// environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f,
 	// -0.8f, -0.2f)); //standard but lets remove it
 	// environment.add(sun.getLight());
@@ -571,6 +570,10 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 		return;
 	    }
 
+	    if (callbackid == (CollisionDefs.WALL_FLAG | CollisionDefs.GROUND_FLAG)) {
+		player.addForce(new Vector3(1,0,0), 20); //TODO make relative to collision angle
+	    }
+	    
 	    if (callbackid == CollisionDefs.GROUND_FLAG) {
 		// System.out.println("ground touched");
 	    }

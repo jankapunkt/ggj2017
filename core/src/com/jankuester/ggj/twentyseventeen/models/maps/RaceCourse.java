@@ -74,7 +74,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
     public void createPhase(int index, int phaseType) {
 	Phase phase = new Phase(this.getPhaseCount());
-
+	System.out.println("create phase: "+ phaseType);
 	Color phaseColor;
 	switch (phaseType) {
 	case Phase.TYPE_CLEAR:
@@ -114,7 +114,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	RaceCourseObject wallLeftModel = this.createTerrain("wall_left", new Vector3(2f, 5f, mapSize),
 		new Vector3(-mapSize / 2 - 1, 0, -index * mapSize), phaseColor, atts);
 	btRigidBody wallLeftBody = wallLeftModel.getBody();
-	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_FLAG);
 	wallLeftBody.setContactCallbackFilter(0);
 	dynamicsWorldRef.addRigidBody(wallLeftBody);
 	phase.phaseObjects.put(wallLeftModel.getId(), wallLeftModel);
@@ -124,7 +124,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	RaceCourseObject wallRightModel = this.createTerrain("wallRight", new Vector3(2f, 5f, mapSize),
 		new Vector3(mapSize / 2 + 1, 0, -index * mapSize), phaseColor, atts);
 	btRigidBody wallRightBody = wallRightModel.getBody();
-	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_FLAG);
 	wallRightBody.setContactCallbackFilter(0);
 	dynamicsWorldRef.addRigidBody(wallRightBody);
 	phase.phaseObjects.put(wallRightModel.getId(), wallRightModel);
