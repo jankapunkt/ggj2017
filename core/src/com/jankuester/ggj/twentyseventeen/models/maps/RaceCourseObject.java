@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
+import com.badlogic.gdx.physics.bullet.Bullet;
 import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
@@ -78,7 +79,8 @@ public class RaceCourseObject extends GameModelInstance implements ICollidable {
 	motionState = new DefaultMotionState();
 	motionState.transform = transform;
 
-	colShape = new btBvhTriangleMeshShape(model.meshParts);
+	colShape = //new btBvhTriangleMeshShape(model.meshParts);
+		Bullet.obtainStaticNodeShape(model.nodes);
 	create(position, 0);
     }
 

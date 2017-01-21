@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g3d.Attribute;
+import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
@@ -14,11 +15,12 @@ import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.models.managers.BaseModelInstanceManager;
 import com.jankuester.ggj.twentyseventeen.models.managers.IModelInstanceManager;
 
-public class RaceCourse extends BaseModelInstanceManager implements IModelInstanceManager{
+public class RaceCourse extends BaseModelInstanceManager implements IModelInstanceManager {
 
     public final ArrayList<RaceCourseObject> instances = new ArrayList<RaceCourseObject>();
 
-    public RaceCourse() {}
+    public RaceCourse() {
+    }
 
     public RaceCourseObject createExistingTerrain(String path, Vector3 pos) {
 	Model currentMap = ModelFactory.getG3DBModel(path);
@@ -27,24 +29,33 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	return createTerrainWithCollisionBody(currentMap, path, pos);
     }
 
-    public RaceCourseObject createTerrain(String id, Vector3 dimensions, Vector3 pos, Color col, final Attribute... attribute) {
-	Model model = models.get(id);
-	if (model == null)
-	    model = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, col, attribute);
-	return createTerrainWithCollisionBody(model, id, pos);
+    public RaceCourseObject createTerrain(String id, Vector3 dimensions, Vector3 pos, Color col,
+	    Attributes attributes) {
+	Model currentModel = models.get(id);
+	if (currentModel == null) {
+	    currentModel = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attributes);
+	    models.put(id, currentModel);
+	}
+
+	return createTerrainWithCollisionBody(currentModel, id, pos);
     }
-    
+
     public RaceCourseObject createTerrainWithCollisionBody(Model model, String id, Vector3 pos) {
-	models.put(id, model);
-	RaceCourseObject currentMapInstance = new RaceCourseObject(model, pos);
-	currentMapInstance.setId(id + "_"+Integer.toString(instances.size()));
-	bodyConstructionInfo.put(id, currentMapInstance.constructionInfo);
+	RaceCourseObject currentMapInstance;
+	btRigidBody.btRigidBodyConstructionInfo currentInfo = bodyConstructionInfo.get(id);
+	if (currentInfo != null) {
+	    currentMapInstance = new RaceCourseObject(model, pos, currentInfo);
+	} else {
+	    currentMapInstance = new RaceCourseObject(model, pos, 0 );
+	    bodyConstructionInfo.put(id, currentMapInstance.constructionInfo);
+	}
+	currentMapInstance.setId(id + "_" + Integer.toString(instances.size()));
+
 	instances.add(currentMapInstance);
 	System.out.println("[Map]: models=" + models.size() + " instances=" + instances.size() + " rigidbodyInfos="
 		+ bodyConstructionInfo.size());
 	return currentMapInstance;
     }
-    
 
     protected RaceCourseObject createMapObjectFromG3DBFile(String g3dbPath, float x, float y, float z, float mass) {
 	Model currentMap = models.get(g3dbPath);
@@ -55,7 +66,8 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	return createCourseObjectWithCollisionBody(g3dbPath, x, y, z, mass, currentMap);
     }
 
-    private RaceCourseObject createCourseObjectWithCollisionBody(String id, float x, float y, float z, float mass, Model model) {
+    private RaceCourseObject createCourseObjectWithCollisionBody(String id, float x, float y, float z, float mass,
+	    Model model) {
 	RaceCourseObject currentMapInstance = null;
 	btRigidBody.btRigidBodyConstructionInfo currentInfo = bodyConstructionInfo.get(id);
 	if (currentInfo == null) {
@@ -64,29 +76,34 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	} else {
 	    currentMapInstance = new RaceCourseObject(model, new Vector3(x, y, z), currentInfo);
 	}
-	currentMapInstance.setId(id + "_"+Integer.toString(instances.size()));
+	currentMapInstance.setId(id + "_" + Integer.toString(instances.size()));
 	instances.add(currentMapInstance);
-	System.out.println("[Map]: models=" + models.size() + " instances=" + instances.size() + " rigidbodyInfos="+ bodyConstructionInfo.size());
+	System.out.println("[Map]: models=" + models.size() + " instances=" + instances.size() + " rigidbodyInfos="
+		+ bodyConstructionInfo.size());
 	return currentMapInstance;
     }
 
-    public RaceCourseObject createObstacle(String id, Vector3 dimensions, Vector3 position, float mass, final Attribute... attribute) {
+    public RaceCourseObject createObstacle(String id, Vector3 dimensions, Vector3 position, float mass,
+	    Attributes attributes) {
 	Model currentModel = models.get(id);
-	if (currentModel == null)
-	    currentModel = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attribute);
+	if (currentModel == null) {
+	    currentModel = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attributes);
+	    models.put(id, currentModel);
+	}
+
 	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);
     }
-    
+
     public RaceCourseObject getGround() {
 	if (instances == null || instances.size() == 0)
 	    return null;
 	return instances.get(0);
     }
-    
+
     public void update(Vector3 playerPos, float playerSpeed) {
-	
+
     }
-    
+
     public void dispose() {
 	Collection<Model> mods = models.values();
 	for (Model m : mods)
@@ -102,5 +119,8 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	return this.instances;
     }
 
+    public void addInstance(GameModelInstance instance) {
+	throw new Error("not yet implemented");
+    }
 
 }

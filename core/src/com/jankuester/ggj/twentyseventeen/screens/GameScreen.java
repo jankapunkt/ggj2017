@@ -12,6 +12,8 @@ import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g3d.Attribute;
+import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
@@ -43,15 +45,18 @@ import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
+import com.badlogic.gdx.utils.Array;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.graphics.rendering.EntityRenderingHelper;
 import com.jankuester.ggj.twentyseventeen.graphics.shader.ColorShader;
 import com.jankuester.ggj.twentyseventeen.models.characters.CharacterState;
 import com.jankuester.ggj.twentyseventeen.models.characters.ICharacterListener;
 import com.jankuester.ggj.twentyseventeen.models.characters.RigidCharacter;
+import com.jankuester.ggj.twentyseventeen.models.environment.SceneObject;
 import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 import com.jankuester.ggj.twentyseventeen.models.factories.AttributeFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
+import com.jankuester.ggj.twentyseventeen.models.managers.SceneObjectsManager;
 import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourse;
 import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourseObject;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
@@ -217,21 +222,22 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private Environment environment;
     private Sun sun;
-    private PointLightsAttribute pointLightAttribute;
+    private Attributes sceneAttributes;
 
     private void loadEnvironment() {
 	System.out.println("loadEnvironment");
 
-	sun = ModelFactory.createSun(0, 5, 0, Color.GOLD, 5);
-
+	sceneAttributes = new Attributes();
+	sun = ModelFactory.createSun(0, 5, 0, Color.GOLD, 50);
+	
 	environment = new Environment();
-	environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.01f, 0.01f, 0.01f, 1f));
+	//environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.01f, 0.01f, 0.01f, 1f));
 	// environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f,
 	// -0.8f, -0.2f)); //standard but lets remove it
-	environment.add(sun.getLight());
+	//environment.add(sun.getLight());
 
 	System.out.println("loadEnvironment done");
-	pointLightAttribute = AttributeFactory.getPointLightAttribute(sun.getLight());
+	sceneAttributes.set(ColorAttribute.createDiffuse(Color.GREEN),AttributeFactory.getPointLightAttribute(sun.getLight()));
     }
 
     // --------------------------------------------------------------------------------------------------
@@ -248,8 +254,8 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// playerModel =
 	// ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
 
-	playerModel = ModelFactory.getBox(2, 2, 2, Color.GREEN, pointLightAttribute,
-		ColorAttribute.createSpecular(Color.BLUE));
+	//Attributes playerAttributes = new Attributes();
+	playerModel = ModelFactory.getBox(2, 2, 2, Color.GREEN, sceneAttributes);
 
 	// player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
 	player = new RigidCharacter(playerModel, "player", 0, 1, 0);
@@ -282,6 +288,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     // --------------------------------------------------------------------------------------------------
 
     private RaceCourse raceCourse;
+    private SceneObjectsManager sceneObjects;
 
     private void loadMapObjectsAndItems() {
 	System.out.println("loadMapObjectsAndItems");
@@ -293,7 +300,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 		// .getBody();
 
 		RaceCourseObject boxModel = raceCourse.createObstacle("box", new Vector3(1, 1, 1),
-			new Vector3(-5 + i * 2, j * 2, -10), 500f, pointLightAttribute);
+			new Vector3(-5 + i * 2, j * 2, -10), 500f, sceneAttributes);
 		btRigidBody box = boxModel.getBody();
 
 		box.setCollisionFlags(
@@ -310,28 +317,40 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void loadMap() {
 	System.out.println("loadMap");
 	raceCourse = new RaceCourse();
+	sceneObjects = new SceneObjectsManager();
 
 	for (int i = 0; i < 10; i++) {
-	    btRigidBody groundBody = raceCourse.createTerrain("ground", new Vector3(100f, 1f, 50f),
-		    new Vector3(0, 0, -i * 50), Color.BLUE, pointLightAttribute).getBody();
+	    
+	    Sun lightOrbLeft = ModelFactory.createSun(-19, 6, -i * 12, Color.WHITE, 5000f);
+	    Sun lightOrbRight = ModelFactory.createSun(19, 6, -i * 12, Color.WHITE, 5000f);
+	    sceneObjects.addInstance(lightOrbLeft);
+	    sceneObjects.addInstance(lightOrbRight);
+	    
+	    Attributes atts = new Attributes();
+	    atts.set(AttributeFactory.getPointLightAttribute(lightOrbLeft.getLight()),
+		    AttributeFactory.getPointLightAttribute(lightOrbRight.getLight()));
+	   
+	    RaceCourseObject groundModel = raceCourse.createObstacle("ground", new Vector3(20f, 1f, 20f),
+		    new Vector3(0, 0, -i * 20), 0,atts);
+	    btRigidBody groundBody = groundModel.getBody();
 	    dynamicsWorld.addRigidBody(groundBody);
 	    groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    groundBody.setContactCallbackFilter(0);
 	    
-	    btRigidBody wallLeftBody = raceCourse.createTerrain("wall_left", new Vector3(2f, 5f, 50f),
-		    new Vector3(-51, 0, -i * 50), Color.BLUE, pointLightAttribute).getBody();
+	    btRigidBody wallLeftBody = raceCourse.createTerrain("wall_left", new Vector3(2f, 5f, 20f),
+		    new Vector3(-21, 0, -i * 20), Color.GREEN, atts).getBody();
 	    dynamicsWorld.addRigidBody(wallLeftBody);
 	    wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    wallLeftBody.setContactCallbackFilter(0);
 	    
 	    
-	    btRigidBody wallRightBody = raceCourse.createTerrain("wallRight", new Vector3(2f, 5f, 50f),
-		    new Vector3(51, 0, -i * 50), Color.BLUE, pointLightAttribute).getBody();
+	    btRigidBody wallRightBody = raceCourse.createTerrain("wallRight", new Vector3(2f, 5f, 20f),
+		    new Vector3(21, 0, -i * 20), Color.GREEN, atts).getBody();
 	    dynamicsWorld.addRigidBody(wallRightBody);
 	    wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    wallRightBody.setContactCallbackFilter(0);
 	    
-	    
+
 	}
 
 	System.out.println("loadMap done");
@@ -483,6 +502,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
 	entityRenderingHelper.begin(player.camera, modelBatch);
 	entityRenderingHelper.render(raceCourse.getRenderingInstances(), environment, shader);
+	entityRenderingHelper.render(sceneObjects.getRenderingInstances(), environment, shader);
 	entityRenderingHelper.render(player, environment, shader);
 	entityRenderingHelper.render(sun, environment, shader);
 	entityRenderingHelper.end();

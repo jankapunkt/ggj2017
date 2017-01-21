@@ -74,9 +74,9 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
      */
     public RigidCharacter(Model model, String id, float x, float y, float z) {
 	super(model);
-	
-	//model.materials.get(0).set(ColorAttribute.createDiffuse(Color.CORAL));
-	
+
+	// model.materials.get(0).set(ColorAttribute.createDiffuse(Color.CORAL));
+
 	this.mass = 1000f;
 	this.pos.set(x, 5, z);
 	this.transform.setTranslation(this.pos);
@@ -84,10 +84,11 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	this.light.setColor(Color.WHITE);
 	this.light.setIntensity(5000);
 	this.light.setPosition(this.pos.add(0, 0, -2));
-	
+
 	// ------- init collision stuff --------//
-	// playerColShape = 
-	playerColShape =  new btBoxShape(new Vector3(1f,1f,1f));//new btSphereShape(1f); //Bullet.obtainStaticNodeShape(model.nodes); //use when model is fixed
+	// playerColShape =
+	playerColShape = new btSphereShape(1.2f); // Bullet.obtainStaticNodeShape(model.nodes);
+						  // //use when model is fixed
 	if (mass > 0f)
 	    playerColShape.calculateLocalInertia(mass, localInertia);
 	else
@@ -104,14 +105,9 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	playerColObj.proceedToTransform(transform);
 	playerColObj.setUserValue(10101010);
 	playerColObj.setCollisionFlags(
-		playerColObj.getCollisionFlags() | 
-		btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
-	playerColObj.setContactCallbackFilter(
-		CollisionDefs.OBJECT_FLAG | 
-		CollisionDefs.WEAPON_FLAG | 
-		CollisionDefs.GROUND_FLAG |
-		CollisionDefs.WALL_FLAG |
-		CollisionDefs.ALL_FLAG);
+		playerColObj.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+	playerColObj.setContactCallbackFilter(CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG
+		| CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_FLAG | CollisionDefs.ALL_FLAG);
 	playerColObj.setContactCallbackFlag(CollisionDefs.PLAYER_FLAG);
 	// playerColObj.setSleepingThresholds(0, 0);
 	playerColObj.setFriction(0);
@@ -182,7 +178,7 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	angleAroundPlayer += anglex;
 	camera.rotateAround(camera.position, right, angley);
 	camera.rotate(Vector3.Y, anglex);
-	//rotateCharacter(anglex, angley, delta);
+	// rotateCharacter(anglex, angley, delta);
 
     }
 
@@ -209,7 +205,7 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	    // wakeup
 	    if (!playerColObj.isActive())
 		playerColObj.activate();
-	    
+
 	    // set current translation vector
 	    transl.set(camera.direction.nor());
 
@@ -236,11 +232,8 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 		buff.set(buff.x * -1, buff.y * -1, buff.z * -1);
 		transl.add(buff);
 	    }
-	    if (leftMove || rightMove)
-		playerColObj.setLinearVelocity(vel.add(transl.scl(3f))); //todo movwe fast left right withut much velocity forward.
-	    
-	    else
-		playerColObj.setLinearVelocity(vel.add(transl.scl(0.1f)));
+
+	    playerColObj.setLinearVelocity(vel.add(transl.scl(0.1f)));
 	}
     }
 
@@ -288,13 +281,13 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 
 	@Override
 	public void getWorldTransform(Matrix4 worldTrans) {
-	    //System.out.println("player:::getWorldTransform");
+	    // System.out.println("player:::getWorldTransform");
 	    worldTrans.set(transform);
 	}
 
 	@Override
 	public void setWorldTransform(Matrix4 worldTrans) {
-	   // System.out.println("player:::setworldTransform");
+	    // System.out.println("player:::setworldTransform");
 	    transform.set(worldTrans);
 	}
     }

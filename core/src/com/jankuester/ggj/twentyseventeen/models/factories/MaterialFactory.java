@@ -9,7 +9,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute;
 
 public class MaterialFactory {
 
-    public static Material createMaterial(Color c,  final Attribute... attributes) {
+    public static Material createMaterial(Color c,  Attributes attributes) {
 	Material mat = new Material(ColorAttribute.createDiffuse(c));
 	mat.set(attributes);
 	return mat;

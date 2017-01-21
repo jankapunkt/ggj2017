@@ -71,7 +71,6 @@ public class EntityRenderingHelper {
 
     public void render(final List<? extends GameModelInstance> instances, final Environment environment, final Shader shader) {
 	for (GameModelInstance instance : instances) {
-	    System.out.println("render "+instance.getId());
 	    render(instance, environment, shader);
 	}
     }
