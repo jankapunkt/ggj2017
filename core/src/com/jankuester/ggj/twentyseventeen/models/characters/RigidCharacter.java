@@ -6,6 +6,7 @@ package com.jankuester.ggj.twentyseventeen.models.characters;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -27,6 +28,7 @@ import com.badlogic.gdx.physics.bullet.linearmath.btMotionState;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.bullet.ICollidable;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
+import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
 /**
  * @author major
@@ -67,6 +69,8 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
     public boolean hitsGround;
     public boolean isMoving;
 
+    private Sound movingSound;
+
     /**
      * @param model
      * @param x
@@ -90,8 +94,9 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 
 	// ------- init collision stuff --------//
 	// playerColShape =
-	playerColShape = new btSphereShape(1.2f); // Bullet.obtainStaticNodeShape(model.nodes);
-						  // //use when model is fixed
+	playerColShape = Bullet.obtainStaticNodeShape(model.nodes);
+	// btSphereShape(1.2f);
+
 	if (mass > 0f)
 	    playerColShape.calculateLocalInertia(mass, localInertia);
 	else
@@ -117,6 +122,10 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 
 	// playerColObj.setAngularFactor(0);
 	playerColObj.setDamping(0, 0);
+    }
+
+    public void setMovingSound(Sound movingSound) {
+	this.movingSound = movingSound;
     }
 
     public void dispose() {
@@ -194,6 +203,10 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
     public final Vector3 buff = new Vector3();
     public final Vector3 vel = new Vector3();
 
+    private boolean movingSoundIsPlaying;
+
+    private long movingSoundId;
+
     /** updates body velocity **/
     public void updateMotion(float delta) {
 	isMoving = forwardMove || backMove || leftMove || rightMove;
@@ -237,7 +250,30 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 	    }
 
 	    playerColObj.setLinearVelocity(vel.add(transl.scl(0.1f)));
+	    if (forwardMove)
+		updateMovingSound(true);
+	} else {
+	    updateMovingSound(false);
 	}
+    }
+
+    private void updateMovingSound(boolean isMoving) {
+	if (movingSound == null)
+	    return;
+	if (!isMoving) {
+	    movingSound.stop();
+	    return;
+	}
+	if (!movingSoundIsPlaying && isMoving) {
+	    movingSoundId = movingSound.loop(GlobalGameSettings.loudeness_fx);
+	}
+	if (movingSoundIsPlaying && isMoving) {
+	    movingSound.setPitch(movingSoundId, getPitch(Math.abs(vel.z)));
+	}
+    }
+
+    private float getPitch(float z) {
+	return 1f + z / 10;
     }
 
     public void setMoveForward(boolean t) {
@@ -319,7 +355,7 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
     }
 
     public CharacterState getCharacterState() {
-	return new CharacterState(0,0);
+	return new CharacterState(0, 0);
     }
 
 }

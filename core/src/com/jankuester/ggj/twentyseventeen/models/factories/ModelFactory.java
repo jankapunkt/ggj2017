@@ -56,19 +56,18 @@ public class ModelFactory {
 	return m;
     }
 
-    public static Model getBox(float w, float h, float d, Color c, Attributes attributes) {
+    public static Model getBox(String id, float w, float h, float d, Color c, Attributes attributes) {
 	ModelBuilder modelBuilder = new ModelBuilder();
-	return modelBuilder.createBox(w, h, d, MaterialFactory.createMaterial(c, attributes),
+	return modelBuilder.createBox(w, h, d, MaterialFactory.createMaterial(id, c, attributes),
 		Usage.Position | Usage.Normal);
     }
 
-    public static Sun createSun(float x, float y, float z, Color color, float intensity) {
+    public static Sun createSun(String id, float x, float y, float z, Color color, float intensity) {
 	PointLight light = createPointLight(x, y, z, color, intensity);
 	ModelBuilder mb = new ModelBuilder();
 	Attributes attributes = new Attributes();
 	attributes.set(AttributeFactory.getPointLightAttribute(light));
-	Model model = mb.createSphere(0.1f, 0.1f, 0.1f, 5, 5,
-		MaterialFactory.createMaterial(color, attributes),
+	Model model = mb.createSphere(0.1f, 0.1f, 0.1f, 5, 5, MaterialFactory.createMaterial(id, color, attributes),
 		Usage.Position | Usage.Normal);
 	return new Sun(model, new Vector3(x, y, z), light);
     }

@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
@@ -29,6 +30,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     private int currentPlayerPhase = 0;
     private int instanceCount = 0;
     private int phaseCount = 0;
+    private int currentPhaseType = Phase.TYPE_CLEAR;
 
     private final btDynamicsWorld dynamicsWorldRef;
 
@@ -63,48 +65,73 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	    currentPlayerPhase = z_rounded;
 	    if (phaseQueue.size > 0)
 		disposePhase(phaseQueue.removeFirst());
-	    createPhase(phaseCount);
+	    createPhase(phaseCount, currentPhaseType);
+	}
+	if (z_rounded % 5 == 0) {
+	    currentPhaseType = (int) Math.round(Math.random() * 3);
 	}
     }
-    
-    public void createPhase(int i){
+
+    public void createPhase(int index, int phaseType) {
 	Phase phase = new Phase(this.getPhaseCount());
-	    
-	    Sun lightOrbLeft = ModelFactory.createSun(0, 6, -i * mapSize, Color.WHITE, 5000f);
 
-	    Attributes atts = new Attributes();
-	    atts.set(ColorAttribute.createDiffuse(Color.GREEN),
-		    AttributeFactory.getPointLightAttribute(lightOrbLeft.getLight()));
+	Color phaseColor;
+	switch (phaseType) {
+	case Phase.TYPE_CLEAR:
+	    phaseColor = Color.ORANGE;
+	    break;
+	case Phase.TYPE_INNOCENTS:
+	    phaseColor = Color.PINK;
+	    break;
+	case Phase.TYPE_OBSTACLES:
+	    phaseColor = Color.RED;
+	    break;
+	case Phase.TYPE_SPEED:
+	    phaseColor = Color.GREEN;
+	    break;
+	default:
+	    throw new Error("unknown phase");
+	}
 
-	    RaceCourseObject groundModel = this.createObstacle("ground", new Vector3(mapSize, 1f, mapSize),
-		    new Vector3(0, 0, -i * mapSize), 0, atts);
-	    
-	    //move this into creation
-	    btRigidBody groundBody = groundModel.getBody();
-	    groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
-	    groundBody.setContactCallbackFilter(0);
-	    dynamicsWorldRef.addRigidBody(groundBody);
-	    phase.phaseObjects.put(groundModel.getId(), groundModel);
+	PointLight pl = ModelFactory.createPointLight(0, 6, -index * mapSize, Color.WHITE, 5000f);
 
-	    RaceCourseObject wallLeftModel = this.createTerrain("wall_left", new Vector3(2f, 5f, mapSize),
-		    new Vector3(-mapSize / 2 - 1, 0, -i * mapSize), Color.GREEN, atts);
-	    btRigidBody wallLeftBody = wallLeftModel.getBody();
-	    wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
-	    wallLeftBody.setContactCallbackFilter(0);
-	    dynamicsWorldRef.addRigidBody(wallLeftBody); //maybe we can later activate them to save computation
-	    phase.phaseObjects.put(wallLeftModel.getId(), wallLeftModel);
+	Attributes atts = new Attributes();
+	atts.set(ColorAttribute.createDiffuse(phaseColor), AttributeFactory.getPointLightAttribute(pl));
 
-	    RaceCourseObject wallRightModel = this.createTerrain("wallRight", new Vector3(2f, 5f, mapSize),
-		    new Vector3(mapSize / 2 + 1, 0, -i * mapSize), Color.GREEN, atts);
-	    btRigidBody wallRightBody = wallRightModel.getBody();
-	    wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
-	    wallRightBody.setContactCallbackFilter(0);
-	    dynamicsWorldRef.addRigidBody(wallRightBody);
-	    phase.phaseObjects.put(wallRightModel.getId(), wallRightModel);
-	    
-	    addPhase(phase);
+	// GROUND
+	
+	RaceCourseObject groundModel = this.createObstacle("ground", new Vector3(mapSize, 1f, mapSize),
+		new Vector3(0, 0, -index * mapSize), 0, atts);
+	btRigidBody groundBody = groundModel.getBody();
+	groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	groundBody.setFriction(0);
+	groundBody.setContactCallbackFilter(0);
+	dynamicsWorldRef.addRigidBody(groundBody);
+	phase.phaseObjects.put(groundModel.getId(), groundModel);
+
+	// WALL LEFT
+	
+	RaceCourseObject wallLeftModel = this.createTerrain("wall_left", new Vector3(2f, 5f, mapSize),
+		new Vector3(-mapSize / 2 - 1, 0, -index * mapSize), phaseColor, atts);
+	btRigidBody wallLeftBody = wallLeftModel.getBody();
+	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	wallLeftBody.setContactCallbackFilter(0);
+	dynamicsWorldRef.addRigidBody(wallLeftBody);
+	phase.phaseObjects.put(wallLeftModel.getId(), wallLeftModel);
+
+	// WALL RIGHT
+	
+	RaceCourseObject wallRightModel = this.createTerrain("wallRight", new Vector3(2f, 5f, mapSize),
+		new Vector3(mapSize / 2 + 1, 0, -index * mapSize), phaseColor, atts);
+	btRigidBody wallRightBody = wallRightModel.getBody();
+	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
+	wallRightBody.setContactCallbackFilter(0);
+	dynamicsWorldRef.addRigidBody(wallRightBody);
+	phase.phaseObjects.put(wallRightModel.getId(), wallRightModel);
+
+	addPhase(phase);
     }
-    
+
     public void addPhase(Phase phase) {
 	phaseQueue.addLast(phase);
 	instances.addAll(phase.phaseObjects.values());
@@ -159,7 +186,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	    Attributes attributes) {
 	Model currentModel = models.get(id);
 	if (currentModel == null) {
-	    currentModel = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attributes);
+	    currentModel = ModelFactory.getBox(id, dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attributes);
 	    models.put(id, currentModel);
 	}
 
@@ -213,7 +240,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	    Attributes attributes) {
 	Model currentModel = models.get(id);
 	if (currentModel == null) {
-	    currentModel = ModelFactory.getBox(dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attributes);
+	    currentModel = ModelFactory.getBox(id, dimensions.x, dimensions.y, dimensions.z, Color.GREEN, attributes);
 	    models.put(id, currentModel);
 	}
 	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);

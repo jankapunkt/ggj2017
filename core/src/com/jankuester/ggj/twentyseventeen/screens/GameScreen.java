@@ -6,6 +6,7 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap.Format;
@@ -130,7 +131,6 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// LOAD MAP AND OBJECTS
 	// --------------------------------------------
 	loadMap();
-	loadMapObjectsAndItems();
 
 	// --------------------------------------------
 	// LOAD PLAYER
@@ -224,7 +224,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	System.out.println("loadEnvironment");
 
 	sceneAttributes = new Attributes();
-	sun = ModelFactory.createSun(0, 5, 0, Color.GREEN, 50);
+	sun = ModelFactory.createSun("sun", 0, 5, 0, Color.GREEN, 50);
 
 	environment = new Environment();
 	// environment.set(new ColorAttribute(ColorAttribute.AmbientLight,
@@ -249,11 +249,11 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     boolean playerHitsGround;
 
     private void loadPlayer() {
-	// playerModel =
-	// ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
+	playerModel = ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
 
 	// Attributes playerAttributes = new Attributes();
-	playerModel = ModelFactory.getBox(2, 2, 2, Color.BLUE, sceneAttributes);
+	// playerModel = ModelFactory.getBox("box",2, 2, 2, Color.BLUE,
+	// sceneAttributes);
 
 	// player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
 	player = new RigidCharacter(playerModel, "player", 0, 1, 0);
@@ -264,6 +264,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// player.setVehicleSpeed(vehicleSpeed);
 
 	player.addListener(this);
+	player.setMovingSound(Gdx.audio.newSound(Gdx.files.internal("audio/fx/velocity.mp3")));
 
 	/*
 	 * dynamicsWorld.addCollisionObject(player.ghost, (short)
@@ -323,11 +324,11 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private void updateMap(Vector3 playerPos) {
 
-	raceCourse.update(playerPos, 0);
+	//raceCourse.update(playerPos, 0);
 	int mapSize = raceCourse.getMapSize();
 
 	for (int i = 0; i < 10; i++) {
-	    raceCourse.createPhase(i);
+	    raceCourse.createPhase(i, Phase.TYPE_CLEAR);
 	}
     }
 

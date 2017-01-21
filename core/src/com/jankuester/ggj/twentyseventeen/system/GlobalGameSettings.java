@@ -12,8 +12,8 @@ public class GlobalGameSettings {
     
     
     //SOUNDS
-    public static float loudeness_music = 0.6f;
-    public static float loudeness_fx = 0.8f;
+    public static float loudeness_music = 0.8f;
+    public static float loudeness_fx = 0.1f;
     
     public GlobalGameSettings() {
 	
