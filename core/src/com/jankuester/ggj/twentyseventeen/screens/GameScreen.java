@@ -54,13 +54,14 @@ import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 import com.jankuester.ggj.twentyseventeen.models.factories.AttributeFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.MaterialFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
+import com.jankuester.ggj.twentyseventeen.models.managers.IPhaseUpdateListener;
 import com.jankuester.ggj.twentyseventeen.models.managers.SceneObjectsManager;
 import com.jankuester.ggj.twentyseventeen.models.maps.Phase;
 import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourse;
 import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourseObject;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
-public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuListener, ICharacterListener {
+public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuListener, ICharacterListener, IPhaseUpdateListener {
 
     public GameScreen() {
     }
@@ -316,14 +317,23 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void loadMap() {
 	System.out.println("loadMap");
 	raceCourse = new RaceCourse(64, dynamicsWorld);
-	sceneObjects = new SceneObjectsManager();
+	raceCourse.addListener(this);
+	sceneObjects = new SceneObjectsManager(64);
 
 	for (int i = 0; i < 10; i++) {
 	    raceCourse.createPhase(i, Phase.TYPE_CLEAR);
 	}
 	System.out.println("loadMap done");
     }
+    
+    public void phaseCreated(Phase phase, int phaseType, String phaseName, int index){
+	sceneObjects.createPhase(phase, phaseType, phaseName, index);
+    }
 
+    public void phaseDisposed(Phase phase) {
+	sceneObjects.disposePhase(phase);
+    }
+    
     // --------------------------------------------------------------------------------------------------
     // CREATE BULLET AND DYNAMICS WORLD
     // --------------------------------------------------------------------------------------------------

@@ -3,6 +3,7 @@ package com.jankuester.ggj.twentyseventeen.models.maps;
 import java.util.HashMap;
 
 import com.badlogic.gdx.graphics.Color;
+import com.jankuester.ggj.twentyseventeen.models.environment.SceneObject;
 
 public class Phase {
 
@@ -26,22 +27,23 @@ public class Phase {
 	}
     }
 
-    public static Color getPhaseColor(int phaseType) {
+    public static Color getPhaseColor(int phaseType, boolean useComplementary) {
 	switch (phaseType) {
 	case Phase.TYPE_CLEAR:
-	    return Color.ORANGE;
+	    return useComplementary ? Color.BLUE : Color.ORANGE;
 	case Phase.TYPE_INNOCENTS:
-	    return Color.PINK;
+	    return useComplementary ? Color.SALMON : Color.OLIVE;
 	case Phase.TYPE_OBSTACLES:
-	    return Color.RED;
+	    return useComplementary ? Color.SKY : Color.SCARLET;
 	case Phase.TYPE_SPEED:
-	    return Color.GREEN;
+	    return useComplementary ? Color.FOREST : Color.GOLD;
 	default:
 	    throw new Error("unknown phasetype");
 	}
     }
 
-    public HashMap<String, RaceCourseObject> phaseObjects = new HashMap<String, RaceCourseObject>(32);
+    public HashMap<String, RaceCourseObject> courseObjects = new HashMap<String, RaceCourseObject>(16);
+    public HashMap<String, SceneObject> sceneObjects = new HashMap<String, SceneObject>(32);
 
     public int phaseId;
 
@@ -50,6 +52,6 @@ public class Phase {
     }
 
     public void removeAll() {
-	// dispose here?
+	//TODO do I need this?
     }
 }

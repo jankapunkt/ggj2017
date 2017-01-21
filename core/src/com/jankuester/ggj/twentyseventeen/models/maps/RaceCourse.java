@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Material;
 import com.badlogic.gdx.graphics.g3d.Model;
@@ -17,12 +16,13 @@ import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Queue;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.models.GameModelInstance;
-import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 import com.jankuester.ggj.twentyseventeen.models.factories.AttributeFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.MaterialFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.models.managers.BaseModelInstanceManager;
 import com.jankuester.ggj.twentyseventeen.models.managers.IModelInstanceManager;
+import com.jankuester.ggj.twentyseventeen.models.managers.IPhaseUpdateListener;
+import com.jankuester.ggj.twentyseventeen.system.Utils;
 
 public class RaceCourse extends BaseModelInstanceManager implements IModelInstanceManager {
 
@@ -32,7 +32,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     private int currentPlayerPhase = 0;
     private int instanceCount = 0;
     private int phaseCount = 0;
-    private int currentPhaseType = Phase.TYPE_CLEAR;
+    private int currentPhaseType;
 
     private final btDynamicsWorld dynamicsWorldRef;
 
@@ -71,8 +71,8 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	    }
 
 	    if (z_rounded % 10 == 0) {
-		currentPhaseType =  (int) Math.round(Math.random() * 3);
-	    } 
+		currentPhaseType = Utils.random(0, 3);
+	    }
 	    createPhase(phaseCount, currentPhaseType);
 	}
     }
@@ -83,14 +83,12 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
 	System.out.println("create phase: " + index + " => " + phaseType + " => " + phasename);
 
-	Color phaseColor = Phase.getPhaseColor(phaseType);
-	PointLight pl = ModelFactory.createPointLight(0, 6, index * mapSize, Color.WHITE, 5000f);
+	Color phaseColor = Phase.getPhaseColor(phaseType, false);
+	phaseColor.a = 0.5f;
+	PointLight pl = ModelFactory.createPointLight(0, 6, index * mapSize, Color.WHITE, 500f);
 	Attributes attributes = new Attributes();
 	attributes.set(ColorAttribute.createDiffuse(phaseColor), AttributeFactory.getPointLightAttribute(pl));
 	Material groundMaterial = MaterialFactory.createMaterial(phasename, attributes);
-	if (groundMaterial == null)
-	    throw new Error();
-	// GROUND
 
 	RaceCourseObject groundModel = this.createTerrain("ground", phasename, new Vector3(mapSize, 1f, mapSize),
 		new Vector3(0, 0, index * mapSize), groundMaterial);
@@ -99,7 +97,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	groundBody.setFriction(0);
 	groundBody.setContactCallbackFilter(0);
 	dynamicsWorldRef.addRigidBody(groundBody);
-	phase.phaseObjects.put(groundModel.getId(), groundModel);
+	phase.courseObjects.put(groundModel.getId(), groundModel);
 
 	Vector3 wallSize = new Vector3(2f, 5f, mapSize);
 
@@ -111,7 +109,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_LEFT);
 	wallLeftBody.setContactCallbackFilter(0);
 	dynamicsWorldRef.addRigidBody(wallLeftBody);
-	phase.phaseObjects.put(wallLeftModel.getId(), wallLeftModel);
+	phase.courseObjects.put(wallLeftModel.getId(), wallLeftModel);
 
 	// WALL RIGHT
 
@@ -121,30 +119,59 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_RIGHT);
 	wallRightBody.setContactCallbackFilter(0);
 	dynamicsWorldRef.addRigidBody(wallRightBody);
-	phase.phaseObjects.put(wallRightModel.getId(), wallRightModel);
+	phase.courseObjects.put(wallRightModel.getId(), wallRightModel);
 
 	addPhase(phase);
+	notifyPhaseCreated(phase, phaseType, phasename, index);
     }
 
     public void addPhase(Phase phase) {
 	System.out.println("add phase " + phaseCount);
 	phaseQueue.addLast(phase);
-	instances.addAll(phase.phaseObjects.values());
+	instances.addAll(phase.courseObjects.values());
 	phaseCount++;
 	System.out.println("[Map]: models=" + models.size() + " instances=" + instances.size() + " rigidbodyInfos="
 		+ bodyConstructionInfo.size());
     }
 
     private void disposePhase(Phase phase) {
-	Collection<RaceCourseObject> phaseValues = phase.phaseObjects.values();
+	Collection<RaceCourseObject> phaseValues = phase.courseObjects.values();
 	instances.removeAll(phaseValues);
 	for (RaceCourseObject raceCourseObject : phaseValues) {
 	    dynamicsWorldRef.removeRigidBody(raceCourseObject.getBody());
 	    raceCourseObject.dispose();
 	}
-	phase.phaseObjects.clear();
+	phase.courseObjects.clear();
 	phase = null;
     }
+
+    // =====================================================================================================//
+    //
+    // OBSERVERS OF IPhaseUpdateListener
+    //
+    // =====================================================================================================//
+    // private List<IPhaseUpdateListener> listeners = new
+    // ArrayList<IPhaseUpdateListener>();
+
+    IPhaseUpdateListener listener;
+
+    public void addListener(IPhaseUpdateListener listener) {
+	this.listener = listener;
+    }
+
+    private void notifyPhaseCreated(Phase phase, int phaseType, String phasename, int index) {
+	listener.phaseCreated(phase, phaseType, phasename, index);
+    }
+
+    private void notifyPhaseDispose(Phase phase) {
+	listener.phaseDisposed(phase);
+    }
+
+    // =====================================================================================================//
+    //
+    // DISPOSAL
+    //
+    // =====================================================================================================//
 
     public void dispose() {
 	Collection<Model> mods = models.values();
@@ -155,6 +182,13 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	models.clear();
 	instances.clear();
     }
+
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // IModelInstanceManager
+    //
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public List<? extends GameModelInstance> getRenderingInstances() {
@@ -219,11 +253,11 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
     public RaceCourseObject createObstacle(String id, String phaseName, Vector3 dimensions, Vector3 position,
 	    float mass, Attributes attributes) {
-	String materialKey = id+phaseName;
+	String materialKey = id + phaseName;
 	Model currentModel = models.get(materialKey);
 	if (currentModel == null) {
-	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, Color.GREEN,
-		    attributes);
+	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z,
+		    Color.GREEN, attributes);
 	    models.put(materialKey, currentModel);
 	}
 	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);
@@ -231,7 +265,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
     public RaceCourseObject createObstacle(String id, String phaseName, Vector3 dimensions, Vector3 position,
 	    float mass, Material mat) {
-	String materialKey = id+phaseName;
+	String materialKey = id + phaseName;
 	Model currentModel = models.get(materialKey);
 	if (currentModel == null) {
 	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
