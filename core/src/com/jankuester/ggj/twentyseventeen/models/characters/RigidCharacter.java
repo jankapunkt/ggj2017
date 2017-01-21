@@ -3,6 +3,9 @@
  */
 package com.jankuester.ggj.twentyseventeen.models.characters;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -294,6 +297,29 @@ public class RigidCharacter extends GameModelInstance implements ICollidable {
 
     public void setCamDistance(int amount) {
 	System.out.println(amount);
+    }
+
+    // =====================================================================================================//
+    //
+    //
+    // OBSERVERS OF CHARACTER
+    //
+    //
+    // =====================================================================================================//
+    private List<ICharacterListener> listeners = new ArrayList<ICharacterListener>();
+
+    public void addListener(ICharacterListener listener) {
+	listeners.add(listener);
+    }
+
+    public void notifyListeners() {
+	for (ICharacterListener listener : listeners) {
+	    listener.characterStateChanged(getCharacterState());
+	}
+    }
+
+    public CharacterState getCharacterState() {
+	return new CharacterState(0,0);
     }
 
 }

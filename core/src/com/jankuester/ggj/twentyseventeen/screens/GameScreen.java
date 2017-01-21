@@ -52,6 +52,7 @@ import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 import com.jankuester.ggj.twentyseventeen.models.factories.AttributeFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
 import com.jankuester.ggj.twentyseventeen.models.managers.SceneObjectsManager;
+import com.jankuester.ggj.twentyseventeen.models.maps.Phase;
 import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourse;
 import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourseObject;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
@@ -224,15 +225,17 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
 	sceneAttributes = new Attributes();
 	sun = ModelFactory.createSun(0, 5, 0, Color.GREEN, 50);
-	
+
 	environment = new Environment();
-	//environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.01f, 0.01f, 0.01f, 1f));
+	// environment.set(new ColorAttribute(ColorAttribute.AmbientLight,
+	// 0.01f, 0.01f, 0.01f, 1f));
 	// environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f,
 	// -0.8f, -0.2f)); //standard but lets remove it
-	//environment.add(sun.getLight());
+	// environment.add(sun.getLight());
 
 	System.out.println("loadEnvironment done");
-	sceneAttributes.set(ColorAttribute.createDiffuse(Color.GREEN),AttributeFactory.getPointLightAttribute(sun.getLight()));
+	sceneAttributes.set(ColorAttribute.createDiffuse(Color.GREEN),
+		AttributeFactory.getPointLightAttribute(sun.getLight()));
     }
 
     // --------------------------------------------------------------------------------------------------
@@ -249,7 +252,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// playerModel =
 	// ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
 
-	//Attributes playerAttributes = new Attributes();
+	// Attributes playerAttributes = new Attributes();
 	playerModel = ModelFactory.getBox(2, 2, 2, Color.BLUE, sceneAttributes);
 
 	// player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
@@ -260,7 +263,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// player.setShield(vehicleShield);
 	// player.setVehicleSpeed(vehicleSpeed);
 
-	// player.addListener(this);
+	player.addListener(this);
 
 	/*
 	 * dynamicsWorld.addCollisionObject(player.ghost, (short)
@@ -311,42 +314,57 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private void loadMap() {
 	System.out.println("loadMap");
-	raceCourse = new RaceCourse();
+	raceCourse = new RaceCourse(64);
 	sceneObjects = new SceneObjectsManager();
 
+	updateMap(new Vector3(0, 0, 0));
+	System.out.println("loadMap done");
+    }
+
+    private void updateMap(Vector3 playerPos) {
+
+	raceCourse.update(playerPos, 0);
+	int mapSize = raceCourse.getMapSize();
+
 	for (int i = 0; i < 10; i++) {
+
+	    Phase phase = new Phase(raceCourse.getPhaseCount());
 	    
-	    Sun lightOrbLeft = ModelFactory.createSun(0, 6, -i * 50, Color.WHITE, 5000f);
+	    Sun lightOrbLeft = ModelFactory.createSun(0, 6, -i * mapSize, Color.WHITE, 5000f);
 	    sceneObjects.addInstance(lightOrbLeft);
 
-	    
 	    Attributes atts = new Attributes();
-	    atts.set(ColorAttribute.createDiffuse(Color.GREEN), AttributeFactory.getPointLightAttribute(lightOrbLeft.getLight()));
-	   
-	    RaceCourseObject groundModel = raceCourse.createObstacle("ground", new Vector3(50f, 1f, 50f),
-		    new Vector3(0, 0, -i * 50), 0,atts);
+	    atts.set(ColorAttribute.createDiffuse(Color.GREEN),
+		    AttributeFactory.getPointLightAttribute(lightOrbLeft.getLight()));
+
+	    RaceCourseObject groundModel = raceCourse.createObstacle("ground", new Vector3(mapSize, 1f, mapSize),
+		    new Vector3(0, 0, -i * mapSize), 0, atts);
+	    
+	    //move this into creation
 	    btRigidBody groundBody = groundModel.getBody();
-	    dynamicsWorld.addRigidBody(groundBody);
 	    groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    groundBody.setContactCallbackFilter(0);
-	    
-	    btRigidBody wallLeftBody = raceCourse.createTerrain("wall_left", new Vector3(2f, 5f, 50f),
-		    new Vector3(-21, 0, -i * 50), Color.GREEN, atts).getBody();
-	    dynamicsWorld.addRigidBody(wallLeftBody);
+	    dynamicsWorld.addRigidBody(groundBody);
+	    phase.phaseObjects.put(groundModel.getId(), groundModel);
+
+	    RaceCourseObject wallLeftModel = raceCourse.createTerrain("wall_left", new Vector3(2f, 5f, mapSize),
+		    new Vector3(-mapSize / 2 - 1, 0, -i * mapSize), Color.GREEN, atts);
+	    btRigidBody wallLeftBody = wallLeftModel.getBody();
 	    wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    wallLeftBody.setContactCallbackFilter(0);
-	    
-	    
-	    btRigidBody wallRightBody = raceCourse.createTerrain("wallRight", new Vector3(2f, 5f, 250f),
-		    new Vector3(21, 0, -i * 50), Color.GREEN, atts).getBody();
-	    dynamicsWorld.addRigidBody(wallRightBody);
+	    dynamicsWorld.addRigidBody(wallLeftBody); //maybe we can later activate them to save computation
+	    phase.phaseObjects.put(wallLeftModel.getId(), wallLeftModel);
+
+	    RaceCourseObject wallRightModel = raceCourse.createTerrain("wallRight", new Vector3(2f, 5f, mapSize),
+		    new Vector3(mapSize / 2 + 1, 0, -i * mapSize), Color.GREEN, atts);
+	    btRigidBody wallRightBody = wallRightModel.getBody();
 	    wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    wallRightBody.setContactCallbackFilter(0);
+	    dynamicsWorld.addRigidBody(wallRightBody);
+	    phase.phaseObjects.put(wallRightModel.getId(), wallRightModel);
 	    
-
+	    raceCourse.addPhase(phase);
 	}
-
-	System.out.println("loadMap done");
     }
 
     // --------------------------------------------------------------------------------------------------
@@ -474,6 +492,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// POST WORLDSTEP
 	player.update(deltaTime);
 	sun.update(player.pos.add(0, 2, -2));
+	raceCourse.update(player.pos, 0);
     }
 
     private void renderOffScreen() {
@@ -486,7 +505,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	    renderScene(null);
 	    fboScreenPause.end();
 	    screenBuffer = fboScreenPause.getColorBufferTexture();
-	    pauseScreen.setBackgroundImage(screenBuffer, true); 
+	    pauseScreen.setBackgroundImage(screenBuffer, true);
 	    screenBuffered = true;
 	}
     }
