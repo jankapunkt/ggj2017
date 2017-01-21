@@ -64,7 +64,7 @@ public class SceneObjectsManager extends BaseModelInstanceManager implements IMo
 	for (int i = 0; i < numLeft; i++) {
 	    int height = Utils.random(32, 64);
 	    dimensions.set(sizeLeft, height, sizeLeft);
-	    position.set(-mapSize - sizeLeft * 2, 0, startZ + i * sizeLeft);
+	    position.set(-mapSize , 0, startZ + i * sizeLeft);
 	    SceneObject sceneObj = createSceneObject("scene_left" + Integer.toString(height), phaseName, dimensions,
 		    position, sceneMaterial);
 	    String objId = "scene_left" + indexName;
@@ -76,7 +76,7 @@ public class SceneObjectsManager extends BaseModelInstanceManager implements IMo
 	for (int i = 0; i < numRight; i++) {
 	    int height = Utils.random(32, 64);
 	    dimensions.set(sizeRight, height, sizeRight);
-	    position.set(mapSize + sizeRight * 2, 0, startZ + i * sizeRight);
+	    position.set(mapSize, 0, startZ + i * sizeRight);
 	    SceneObject sceneObj = createSceneObject("scene_left" + Integer.toString(height), phaseName, dimensions,
 		    position, sceneMaterial);
 	    String objId = "scene_left" + indexName;

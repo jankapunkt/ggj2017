@@ -222,7 +222,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void loadEnvironment() {
 	System.out.println("loadEnvironment");
 
-	sun = ModelFactory.createSun("sun", 0, 5, 0, Color.GOLD, 50);
+	sun = ModelFactory.createSun("sun", 0, 5, 0, Color.GOLD, 5);
 
 	environment = new Environment();
 	//environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.41f, 0.41f, 0.41f, 1f));

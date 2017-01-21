@@ -385,9 +385,12 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	this.ghost.setWorldTransform(transform);
     }
     
+    boolean impulse = false;
     public void addForce(Vector3 forceDir, float strength) {
-	strength = strength / 100 * velocity.z;
-	charControl.setWalkDirection(forceDir.nor().scl(strength));
+	impulse = true;
+	strength = strength / 1 * velocity.z;
+	charControl.applyImpulse(forceDir.nor().scl(strength));
+	impulse = false;
     }
 
     /**
@@ -400,6 +403,8 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
      *            delta time
      */
     protected void updateMotion(float delta) {
+	if (impulse)return;
+	
 	isMoving = forwardMove || backMove || leftMove || rightMove;
 
 	// skip unwanted
@@ -446,8 +451,8 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	if (isMoving) // finally apply
 	{
 
-	    else if (leftMove || rightMove)
-		transl.limit(5f);
+	   if (leftMove || rightMove)
+		transl.limit(0.1f);
 	    else
 		transl.limit(0.005f);
 	    
