@@ -12,21 +12,18 @@ import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g3d.Attribute;
 import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.attributes.PointLightsAttribute;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
 import com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -45,14 +42,12 @@ import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.physics.bullet.dynamics.btSequentialImpulseConstraintSolver;
 import com.badlogic.gdx.physics.bullet.linearmath.btIDebugDraw;
-import com.badlogic.gdx.utils.Array;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.graphics.rendering.EntityRenderingHelper;
 import com.jankuester.ggj.twentyseventeen.graphics.shader.ColorShader;
 import com.jankuester.ggj.twentyseventeen.models.characters.CharacterState;
 import com.jankuester.ggj.twentyseventeen.models.characters.ICharacterListener;
 import com.jankuester.ggj.twentyseventeen.models.characters.RigidCharacter;
-import com.jankuester.ggj.twentyseventeen.models.environment.SceneObject;
 import com.jankuester.ggj.twentyseventeen.models.environment.Sun;
 import com.jankuester.ggj.twentyseventeen.models.factories.AttributeFactory;
 import com.jankuester.ggj.twentyseventeen.models.factories.ModelFactory;
@@ -228,7 +223,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	System.out.println("loadEnvironment");
 
 	sceneAttributes = new Attributes();
-	sun = ModelFactory.createSun(0, 5, 0, Color.GOLD, 50);
+	sun = ModelFactory.createSun(0, 5, 0, Color.GREEN, 50);
 	
 	environment = new Environment();
 	//environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.01f, 0.01f, 0.01f, 1f));
@@ -255,7 +250,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	// ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
 
 	//Attributes playerAttributes = new Attributes();
-	playerModel = ModelFactory.getBox(2, 2, 2, Color.GREEN, sceneAttributes);
+	playerModel = ModelFactory.getBox(2, 2, 2, Color.BLUE, sceneAttributes);
 
 	// player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
 	player = new RigidCharacter(playerModel, "player", 0, 1, 0);
@@ -321,31 +316,29 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
 	for (int i = 0; i < 10; i++) {
 	    
-	    Sun lightOrbLeft = ModelFactory.createSun(-19, 6, -i * 12, Color.WHITE, 5000f);
-	    Sun lightOrbRight = ModelFactory.createSun(19, 6, -i * 12, Color.WHITE, 5000f);
+	    Sun lightOrbLeft = ModelFactory.createSun(0, 6, -i * 50, Color.WHITE, 5000f);
 	    sceneObjects.addInstance(lightOrbLeft);
-	    sceneObjects.addInstance(lightOrbRight);
+
 	    
 	    Attributes atts = new Attributes();
-	    atts.set(AttributeFactory.getPointLightAttribute(lightOrbLeft.getLight()),
-		    AttributeFactory.getPointLightAttribute(lightOrbRight.getLight()));
+	    atts.set(ColorAttribute.createDiffuse(Color.GREEN), AttributeFactory.getPointLightAttribute(lightOrbLeft.getLight()));
 	   
-	    RaceCourseObject groundModel = raceCourse.createObstacle("ground", new Vector3(20f, 1f, 20f),
-		    new Vector3(0, 0, -i * 20), 0,atts);
+	    RaceCourseObject groundModel = raceCourse.createObstacle("ground", new Vector3(50f, 1f, 50f),
+		    new Vector3(0, 0, -i * 50), 0,atts);
 	    btRigidBody groundBody = groundModel.getBody();
 	    dynamicsWorld.addRigidBody(groundBody);
 	    groundBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    groundBody.setContactCallbackFilter(0);
 	    
-	    btRigidBody wallLeftBody = raceCourse.createTerrain("wall_left", new Vector3(2f, 5f, 20f),
-		    new Vector3(-21, 0, -i * 20), Color.GREEN, atts).getBody();
+	    btRigidBody wallLeftBody = raceCourse.createTerrain("wall_left", new Vector3(2f, 5f, 50f),
+		    new Vector3(-21, 0, -i * 50), Color.GREEN, atts).getBody();
 	    dynamicsWorld.addRigidBody(wallLeftBody);
 	    wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    wallLeftBody.setContactCallbackFilter(0);
 	    
 	    
-	    btRigidBody wallRightBody = raceCourse.createTerrain("wallRight", new Vector3(2f, 5f, 20f),
-		    new Vector3(21, 0, -i * 20), Color.GREEN, atts).getBody();
+	    btRigidBody wallRightBody = raceCourse.createTerrain("wallRight", new Vector3(2f, 5f, 250f),
+		    new Vector3(21, 0, -i * 50), Color.GREEN, atts).getBody();
 	    dynamicsWorld.addRigidBody(wallRightBody);
 	    wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG);
 	    wallRightBody.setContactCallbackFilter(0);
@@ -485,6 +478,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 
     private void renderOffScreen() {
 	if (!screenBuffered) {
+	    System.out.println("FBO BUFFER");
 	    fboScreenPause.begin();
 	    Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 	    Gdx.gl.glClearColor(0.0f, 0.0f, 0.0f, 1f);
@@ -492,8 +486,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	    renderScene(null);
 	    fboScreenPause.end();
 	    screenBuffer = fboScreenPause.getColorBufferTexture();
-	    pauseScreen.setBackgroundImage(screenBuffer, true); // this will be
-								// used // in
+	    pauseScreen.setBackgroundImage(screenBuffer, true); 
 	    screenBuffered = true;
 	}
     }

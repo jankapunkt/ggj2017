@@ -4,8 +4,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class PauseScreen extends ScreenBase {
 
-    private TextureRegion background;
-
     public PauseScreen() {
 	// TODO Auto-generated constructor stub
     }
@@ -21,13 +19,10 @@ public class PauseScreen extends ScreenBase {
 
     @Override
     public void render(float delta) {
-	// Gdx.gl.glClearColor(1, 1, 1, 1);
-	// Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-	// stage.act();
-	// batch.setProjectionMatrix(camera.combined);
+	System.out.println("render");
 	spriteBatch.begin();
-	spriteBatch.draw(background, 0, 0, width, height);
-	// stage.draw();
+	if (backgroundImage != null)
+	    spriteBatch.draw(backgroundImage, 0, 0, width, height);
 	spriteBatch.end();
     }
 
@@ -53,8 +48,6 @@ public class PauseScreen extends ScreenBase {
 
     @Override
     public void dispose() {
-	if (background != null && background.getTexture() != null)
-	    background.getTexture().dispose();
 	super.dispose();
     }
 

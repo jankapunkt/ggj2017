@@ -185,8 +185,11 @@ public class ScreenBase implements Screen {
     }
 
     public void setBackgroundImage(Texture background, boolean fromBuffer) {
-	if (backgroundImage != null)
+	System.out.println("set bg image");
+	if (backgroundImage != null){
 	    backgroundImage.getTexture().dispose();
+	    backgroundImage = null;
+	}
 	if (fromBuffer) {
 	    background.setFilter(TextureFilter.Linear, TextureFilter.Linear);
 	    TextureRegion region = new TextureRegion(background);
@@ -195,6 +198,7 @@ public class ScreenBase implements Screen {
 	} else {
 	    this.backgroundImage = new TextureRegion(background);
 	}
+	System.out.println("set =>" + (backgroundImage != null));
     }
 
 
