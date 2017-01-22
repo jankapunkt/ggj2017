@@ -56,4 +56,10 @@ public class Phase {
     public void removeAll() {
 	//TODO do I need this?
     }
+
+    public void update() {
+	for (RaceCourseObject raceCourseObj : courseObjects.values()) {
+	    raceCourseObj.getBody().activate(true);
+	}
+    }
 }

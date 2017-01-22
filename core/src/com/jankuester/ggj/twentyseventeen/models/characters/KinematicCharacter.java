@@ -89,12 +89,12 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	position.set(x, y, z);
 	transform.setTranslation(this.position);
 	transform.rotate(Vector3.X, 90);
-	transform.rotate(Vector3.Y, 180);
+	//transform.rotate(Vector3.Y, 180);
 
 	// init capsule shape
-	// playerColShape = new btSphereShape(0.5f);
-	playerColShape = new btBoxShape(new Vector3(0.5f, 0.5f, 0.5f));
-	// playerColShape = new btCapsuleShape(0.5f, 2f); //for less computation
+	playerColShape = new btSphereShape(0.5f);
+	//playerColShape = new btBoxShape(new Vector3(0.5f, 0.5f, 0.5f));
+	//playerColShape = new btCapsuleShape(0.5f, 2f); //for less computation
 	playerColShape.calculateLocalInertia(mass, localInertia);
 
 	// ------------------------------------
@@ -108,9 +108,9 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	ghost.setCollisionShape(playerColShape);
 
 	ghost.setCollisionFlags(
-		ghost.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+		ghost.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_KINEMATIC_OBJECT | btCollisionObject.CollisionFlags.CF_CHARACTER_OBJECT);
 	ghost.setContactCallbackFilter(CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG | CollisionDefs.GROUND_FLAG
-		| CollisionDefs.WALL_LEFT | CollisionDefs.WALL_RIGHT | CollisionDefs.ALL_FLAG);
+		| CollisionDefs.WALL_LEFT | CollisionDefs.WALL_RIGHT | CollisionDefs.OBSTACLE_FLAG | CollisionDefs.ALL_FLAG);
 	ghost.setContactCallbackFlag(CollisionDefs.PLAYER_FLAG);
 
 	ghost.setFriction(0);
@@ -138,7 +138,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     //
     // =====================================================================================================//
 
-    private float maxVelocity = 7;
+    private float maxVelocity = 5;
     private float agility = 1;
 
     public void setVehicleAgility(int value) {
@@ -306,39 +306,34 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	float anglex = -dx * delta * 5;
 	if ((angley > 0 && camera.direction.y > 0.75f) || (angley < 0 && camera.direction.y < -0.75f))
 	    angley = 0; // limit y-angle
+	System.out.println("rotate cam");
 
 	right.set(camera.direction).crs(camera.up).nor();
 
-	if (currentCameraMode == CAMERA_MODE_FIRST) {
-	    camera.rotateAround(camera.position, right, angley);
-	    camera.rotate(Vector3.Y, anglex);
-	    // rotateCharacter(anglex, angley, delta);
-	}
-	if (currentCameraMode == CAMERA_MODE_THIRD) {
-	    angleAroundPlayer += anglex;
-	    camera.rotateAround(camera.position, right, angley);
-	    camera.rotate(Vector3.Y, anglex);
-	    // rotateCharacter(anglex, angley, delta);
-	}
+	angleAroundPlayer += anglex;
+	camera.rotateAround(camera.position, right, angley);
+	camera.rotate(Vector3.Y, anglex);
 
     }
 
     private float deviation = 0.001f;
 
     private void fixCam(float delta) {
-	System.out.println(camera.direction);
+	System.out.println("fix cam => " + camera.direction);
 	Vector3 target = Vector3.Z;
 	float camDirZ = camera.direction.z;
-	float angle = (target.z - camDirZ)*180;
-	if (camDirZ < target.z - deviation || camDirZ > target.z + deviation)
-	    rotateCamera(angle, 0, delta);
-	else{
+	float camDirY = camera.direction.y;
+	float angleZ = (target.z - camDirZ) * 180;
+	float angleY = (target.y - camDirY) * 180;
+	if (camDirY < target.y - deviation || camDirY > target.y + deviation)
+	    rotateCamera(0, angleY, delta);
+	else if (camDirZ < target.z - deviation || camDirZ > target.z + deviation)
+	    rotateCamera(angleZ, 0, delta);
+	else {
 	    this.camFixed = true;
 	    notifyCamReady();
 	}
     }
-
-
 
     /**
      * Updates the ghost's world transform and syncs camera position with
@@ -474,6 +469,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	    else
 		velocity.limit(maxVelocity);
 	    charControl.setWalkDirection(velocity);
+	    
 	    // charControl.setLinearVelocity(velocity.add(transl));
 	    if (Math.round(velocity.z) != lastCharSpeed)
 		notifyListeners();
@@ -658,12 +654,17 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     public void notifyListeners() {
 	listener.characterStateChanged(getCharacterState());
     }
-    
+
     private void notifyCamReady() {
 	listener.characterReady(true);
     }
 
     public CharacterState getCharacterState() {
 	return new CharacterState(getShield(), getSpeed());
+    }
+
+    public void setDamage(float damage) {
+	this.currentShield = this.currentShield - damage;
+	notifyListeners();
     }
 }

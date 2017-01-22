@@ -6,10 +6,12 @@ import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g3d.Environment;
@@ -165,22 +167,28 @@ public class GameScreen extends ScreenBase
     private Texture screenBuffer;
     private SpriteBatch spriteBatch;
     private FrameBuffer fboScreenPause;
-    
-    //STATS TO DISPLAY
-    protected float currentShieldPercent=1f;
+
+    // STATS TO DISPLAY
+    protected float currentShieldPercent = 1f;
     protected float currentSpeedPercent = 0f;
-    
+
     protected long score = 0;
     protected String scoreStr = "";
 
     private Color currentPrimaryColor;
     private Color currentComplemColor;
-    
+
+    private BitmapFont headlineFont;
+    private BitmapFont scoreFont;
+
     private void loadUI() {
+
+	headlineFont = ScreenComponentFactory.createFont("fonts/XOLONIUM-REGULAR.OTF", 128);
+	scoreFont = ScreenComponentFactory.createFont("fonts/XOLONIUM-REGULAR.OTF", 64);
 	shapeRenderer = new ShapeRenderer();
 	shapeRenderer.setAutoShapeType(true);
 	spriteBatch = new SpriteBatch();
-	
+
 	// PAUSE SCREEN UI
 	pauseScreen = new PauseScreen();
 	pauseScreen.setWidth(screenWidth);
@@ -191,7 +199,7 @@ public class GameScreen extends ScreenBase
 	font = ScreenComponentFactory.defaultFont;
 	font.setColor(Color.WHITE);
 	score = 0;
-	
+
 	currentComplemColor = Phase.getPhaseColor(Phase.TYPE_CLEAR, true);
 	currentPrimaryColor = Phase.getPhaseColor(Phase.TYPE_CLEAR, false);
     }
@@ -268,16 +276,15 @@ public class GameScreen extends ScreenBase
     public Vector3 playerPos;
     boolean playerHitsGround;
     boolean playerIsReady = false;
+    private boolean gameOver;
 
     private void loadPlayer() {
-	// playerModel =
-	// ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
+	playerModel =ModelFactory.getG3DBModel("models/vehicles/medium/vehicle_mid.g3db");
 
 	// Attributes playerAttributes = new Attributes();
 	// playerModel = ModelFactory.getBox("box",2, 2, 2, Color.BLUE,
 	// sceneAttributes);
-	playerModel = ModelFactory.createSphereModel(1.2f, MaterialFactory.createMaterial("player",
-		ColorAttribute.createDiffuse(Color.GOLD), AttributeFactory.getPointLightAttribute(sun.getLight())));
+	//playerModel = ModelFactory.createSphereModel(1.2f, MaterialFactory.createMaterial("player", ColorAttribute.createDiffuse(Color.GOLD), AttributeFactory.getPointLightAttribute(sun.getLight())));
 
 	player = new KinematicCharacter(playerModel, "player", 0, 1, 0);
 	// player = new RigidCharacter(playerModel, "player", 0, 1, 0);
@@ -303,13 +310,16 @@ public class GameScreen extends ScreenBase
 	currentShieldPercent = cstate.shield / 100;
 	currentSpeedPercent = cstate.speed;
 	System.out.println(currentSpeedPercent);
+	if (cstate.shield < 0) {
+	    gameOver = true;
+	}
     }
-    
-    public void characterReady(boolean readiness){
+
+    public void characterReady(boolean readiness) {
 	playerIsReady = readiness;
-	if (playerIsReady){
+	if (playerIsReady) {
+	    go.play(GlobalGameSettings.loudeness_fx);
 	    musicBg.play();
-	    //play 3 2 1 go
 	}
     }
 
@@ -320,31 +330,6 @@ public class GameScreen extends ScreenBase
     private RaceCourse raceCourse;
     private SceneObjectsManager sceneObjects;
 
-    private void loadMapObjectsAndItems() {
-	System.out.println("loadMapObjectsAndItems");
-	// create some boxes to collide
-	for (int i = 0; i < 5; i++) {
-	    for (int j = 0; j < 5; j++) {
-		// map.create("models/maps/simple_terrain/obstacles/box4.g3db",
-		// -5 + i * 2, j * 2, -400, 5000f)
-		// .getBody();
-		/*
-		 * RaceCourseObject boxModel = raceCourse.createObstacle("box",
-		 * new Vector3(1, 1, 1), new Vector3(-5 + i * 2, j * 2, -10),
-		 * 500f, sceneAttributes); btRigidBody box = boxModel.getBody();
-		 * 
-		 * box.setCollisionFlags( box.getCollisionFlags() |
-		 * btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK)
-		 * ; box.setContactCallbackFlag(CollisionDefs.OBJECT_FLAG);
-		 * box.setContactCallbackFilter(CollisionDefs.PLAYER_FLAG);
-		 * box.setUserValue(CollisionDefs.generateUserValue());
-		 * dynamicsWorld.addRigidBody(box);
-		 */
-	    }
-	}
-	System.out.println("loadMapObjectsAndItems done");
-    }
-
     private void loadMap() {
 	System.out.println("loadMap");
 	raceCourse = new RaceCourse(64, dynamicsWorld);
@@ -352,7 +337,7 @@ public class GameScreen extends ScreenBase
 	sceneObjects = new SceneObjectsManager(64);
 
 	for (int i = 0; i < 10; i++) {
-	    raceCourse.createPhase(i, Phase.TYPE_CLEAR);
+	    raceCourse.createPhase(i, Phase.TYPE_OBSTACLES);
 	}
 	System.out.println("loadMap done");
     }
@@ -449,11 +434,18 @@ public class GameScreen extends ScreenBase
     private FrameBuffer src;
     private TextureRegion celSpriteRegion;
 
+    private Sound go;
+    private Sound prepare;
+
     protected void loadSounds() {
 	System.out.println("loadSounds");
 	musicBg = Gdx.audio.newMusic(Gdx.files.internal("audio/maps/city_map_bg.mp3"));
 	musicBg.setVolume(GlobalGameSettings.loudeness_music);
 	musicBg.setLooping(true);
+
+	go = Gdx.audio.newSound(Gdx.files.internal("audio/fx/go.mp3"));
+	prepare = Gdx.audio.newSound(Gdx.files.internal("audio/fx/prepare.mp3"));
+	prepare.play(GlobalGameSettings.loudeness_fx);
 	System.out.println("loadSounds done");
     }
 
@@ -467,7 +459,9 @@ public class GameScreen extends ScreenBase
     public void render(float delta) {
 
 	if (!this.paused) {
-	    doWorldStep();
+	    if (!this.gameOver)
+		doWorldStep();
+	    
 	    if (this.celShading) {
 		renderOnScreen(colorShader);
 	    } else {
@@ -483,6 +477,7 @@ public class GameScreen extends ScreenBase
     private void renderOnScreen(Shader shader) {
 	beforeRenderScene();
 	renderScene(shader);
+	renderUI();
     }
 
     private void beforeRenderScene() {
@@ -494,9 +489,10 @@ public class GameScreen extends ScreenBase
     }
 
     private void doWorldStep() {
-	deltaTime = Math.min(1f / 30f, Gdx.graphics.getDeltaTime()) * worldSpeed; // max
+	deltaTime = Math.min(1f / 60f, Gdx.graphics.getDeltaTime()); // max
 	dynamicsWorld.stepSimulation(deltaTime, 5, 1f / 60f); // step world
-
+	//dynamicsWorld.stepSimulation(deltaTime, 30);
+	
 	// POST WORLDSTEP
 	player.update(deltaTime);
 	sun.update(player.position.add(0, 2, -2));
@@ -518,7 +514,6 @@ public class GameScreen extends ScreenBase
 	}
     }
 
-    
     private void renderScene(Shader shader) {
 	spriteBatch.begin();
 	if (backgroundImage != null)
@@ -537,23 +532,42 @@ public class GameScreen extends ScreenBase
 	    dynamicsWorld.debugDrawWorld();
 	    debugDrawer.end();
 	}
+    }
 
-	int barHeight = screenHeight -40;
-	shapeRenderer.begin();
-	//CONTENT
-	shapeRenderer.set(ShapeType.Filled);
-	shapeRenderer.rect(20, 20, 20 , barHeight*currentShieldPercent, currentComplemColor, currentComplemColor, currentPrimaryColor, currentPrimaryColor);
-	shapeRenderer.rect(screenWidth - 40, 20, 20 , barHeight*currentSpeedPercent, currentComplemColor, currentComplemColor, currentPrimaryColor, currentPrimaryColor);
-	
-	
-	//BORDERS
-	shapeRenderer.set(ShapeType.Line);
-	shapeRenderer.rect(20, 20, 20 , barHeight, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE);
-	shapeRenderer.rect(screenWidth - 40, 20, 20 , barHeight, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE);
-	shapeRenderer.end();
-	
+    public void renderUI() {
+	if (gameOver) {
+	    musicBg.stop();
+	    // play game over sound
+	    spriteBatch.begin();
+	    headlineFont.draw(spriteBatch, "GAME OVER!", screenWidth / 4.5f, screenHeight / 2);
+	    spriteBatch.end();
+	    return;
+	}
+
+	int barHeight = screenHeight - 40;
+
+	if (playerIsReady) {
+	    shapeRenderer.begin();
+	    // CONTENT
+	    shapeRenderer.set(ShapeType.Filled);
+	    shapeRenderer.rect(20, 20, 20, barHeight * currentShieldPercent, currentComplemColor, currentComplemColor,
+		    currentPrimaryColor, currentPrimaryColor);
+	    shapeRenderer.rect(screenWidth - 40, 20, 20, barHeight * currentSpeedPercent, currentComplemColor,
+		    currentComplemColor, currentPrimaryColor, currentPrimaryColor);
+
+	    // BORDERS
+	    shapeRenderer.set(ShapeType.Line);
+	    shapeRenderer.rect(20, 20, 20, barHeight, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE);
+	    shapeRenderer.rect(screenWidth - 40, 20, 20, barHeight, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE);
+	    shapeRenderer.end();
+	}
+
 	spriteBatch.begin();
-	font.draw(spriteBatch, scoreStr, screenWidth / 2 - 90, 50);
+	if (playerIsReady) {
+	    scoreFont.draw(spriteBatch, scoreStr, screenWidth / 8, screenHeight - 20);
+	} else {
+	    headlineFont.draw(spriteBatch, "PREPARE!", screenWidth / 4.5f, screenHeight / 2);
+	}
 	spriteBatch.end();
     }
 
@@ -626,35 +640,35 @@ public class GameScreen extends ScreenBase
 	    int id0 = manifold.getBody0().getUserValue();
 	    int id1 = manifold.getBody1().getUserValue();
 	    int playerval = player.ghost.getUserValue();
-	    // int playerval = player.getBody().getUserValue();
-	    int callbackid;
+	    int callbackid = 0;
 
-	    if (match0 && id0 == playerval) {
+	    //if (!match0 && !match1)return;
+	    
+	    if (id0 == playerval) 
 		callbackid = manifold.getBody1().getContactCallbackFlag();
-	    } else if (match1 && id1 == playerval) {
+	   
+	    if (id1 == playerval) 
 		callbackid = manifold.getBody0().getContactCallbackFlag();
-	    } else {
-		return;
-	    }
-
+	   
+	    
 	    if (callbackid == (CollisionDefs.WALL_LEFT | CollisionDefs.GROUND_FLAG)) {
-		player.addForce(new Vector3(1, 0, 0), 20);
+		player.addForce(new Vector3(1, 0, 0), 15);
 	    }
 
 	    if (callbackid == (CollisionDefs.WALL_RIGHT | CollisionDefs.GROUND_FLAG)) {
-		player.addForce(new Vector3(-1, 0, 0), 20);
+		player.addForce(new Vector3(-1, 0, 0), 15);
 	    }
 
 	    if (callbackid == CollisionDefs.GROUND_FLAG) {
 		player.hitsGround = true;
 	    }
 
-	    if (callbackid == CollisionDefs.OBJECT_FLAG) {
-		// TODO make damage
+	    if (callbackid == (CollisionDefs.OBJECT_FLAG | CollisionDefs.OBSTACLE_FLAG)) {
+		player.setDamage(10000);
 	    }
 
 	    if (callbackid == CollisionDefs.WEAPON_FLAG) {
-		System.out.println("weapon touched");
+		throw new Error("WEAPON TOUCHED");
 	    }
 	}
     }

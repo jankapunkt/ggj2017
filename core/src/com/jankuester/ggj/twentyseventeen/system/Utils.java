@@ -10,4 +10,9 @@ public class Utils {
 	max = max+1;
 	return random.nextInt(max - min) + min;
     }
+    
+    public static boolean random(int max){
+	float rand = random(0, max)/100;
+	return Math.round(rand) == 1 ? true : false;
+    }
 }

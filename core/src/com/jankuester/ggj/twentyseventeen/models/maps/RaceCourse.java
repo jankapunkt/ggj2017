@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
 import com.badlogic.gdx.physics.bullet.dynamics.btDynamicsWorld;
 import com.badlogic.gdx.physics.bullet.dynamics.btRigidBody;
 import com.badlogic.gdx.utils.Queue;
@@ -29,15 +30,22 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     public final ArrayList<RaceCourseObject> instances = new ArrayList<RaceCourseObject>(256);
     public final Queue<Phase> phaseQueue;
     private int mapSize = 64;
+    private float halfMapSize;
+    private float quarterMapSize;
+    private float octerMapSize;
     private int currentPlayerPhase = 0;
     private int instanceCount = 0;
     private int phaseCount = 0;
     private int nextPhaseType;
 
     private final btDynamicsWorld dynamicsWorldRef;
+    private int random;
 
     public RaceCourse(int mapSize, final btDynamicsWorld dynamicsWorlfRef) {
 	this.mapSize = mapSize;
+	halfMapSize = mapSize / 2;
+	quarterMapSize = mapSize / 4;
+	octerMapSize = mapSize / 8;
 	phaseQueue = new Queue<Phase>(16);
 	this.dynamicsWorldRef = dynamicsWorlfRef;
     }
@@ -66,9 +74,11 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	    currentPlayerPhase = z_rounded;
 	    if (phaseQueue.size > 0) {
 		Phase currentPhase = phaseQueue.first();
-		if (z_rounded == currentPhase.phaseId);
-		    notifyPhaseUpdate(z_rounded, currentPhase.phaseType);
-		if(z_rounded > currentPhase.phaseId + 1)
+		//currentPhase.update();
+		if (z_rounded == currentPhase.phaseId)
+		    ;
+		notifyPhaseUpdate(z_rounded, currentPhase.phaseType);
+		if (z_rounded > currentPhase.phaseId + 1)
 		    disposePhase(phaseQueue.removeFirst());
 	    }
 
@@ -87,6 +97,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	System.out.println("create phase: " + index + " => " + phaseType + " => " + phasename);
 
 	Color phaseColor = Phase.getPhaseColor(phaseType, false);
+	Color complementaryColor = Phase.getPhaseColor(phaseType, true);
 	phaseColor.a = 0.5f;
 	PointLight pl = ModelFactory.createPointLight(0, 52, index * mapSize, Color.WHITE, 8000f);
 	Attributes attributes = new Attributes();
@@ -107,9 +118,12 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	// WALL LEFT
 
 	RaceCourseObject wallLeftModel = this.createTerrain("wall_left", phasename, wallSize,
-		new Vector3(-mapSize / 2 - 1, 0, index * mapSize),
+		new Vector3(-mapSize / 2 - 1, 2, index * mapSize),
 		MaterialFactory.createMaterial(phasename, attributes));
 	btRigidBody wallLeftBody = wallLeftModel.getBody();
+	wallLeftBody.setFriction(0);
+	wallLeftBody.setDamping(0, 0);
+	wallLeftBody.setAnisotropicFriction(Vector3.Zero);
 	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_LEFT);
 	wallLeftBody.setContactCallbackFilter(0);
 	dynamicsWorldRef.addRigidBody(wallLeftBody);
@@ -118,7 +132,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	// WALL RIGHT
 
 	RaceCourseObject wallRightModel = this.createTerrain("wallRight", phasename, wallSize,
-		new Vector3(mapSize / 2 + 1, 0, index * mapSize),
+		new Vector3(mapSize / 2 + 1, 2, index * mapSize),
 		MaterialFactory.createMaterial(phasename, attributes));
 	btRigidBody wallRightBody = wallRightModel.getBody();
 	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_RIGHT);
@@ -126,8 +140,54 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	dynamicsWorldRef.addRigidBody(wallRightBody);
 	phase.courseObjects.put(wallRightModel.getId(), wallRightModel);
 
+	int chance = 0;
+	int lowChance = 0;
+	switch (phaseType) {
+	case Phase.TYPE_OBSTACLES:
+	    chance = 100;
+	    lowChance = 30;
+	    break;
+	case Phase.TYPE_CLEAR:
+	    chance = 60;
+	    lowChance = 0;
+	    break;
+	case Phase.TYPE_INNOCENTS:
+	    chance = 70;
+	    lowChance = 10;
+	    break;
+	case Phase.TYPE_SPEED:
+	    chance = 85;
+	    lowChance = 20;
+	    break;
+	default:
+	    break;
+	}
+	boolean placeObject = Utils.random(lowChance, chance) > 50 ? true : false;
+	if (placeObject) {
+	    RaceCourseObject boxModel = createObstacle(index, phasename, pl, complementaryColor);
+	    phase.courseObjects.put(boxModel.getId(), boxModel);
+	}
+
 	addPhase(phase);
 	notifyPhaseCreated(phase, phaseType, phasename, index);
+    }
+
+    private RaceCourseObject createObstacle(int index, String phasename, PointLight pl, Color col) {
+	Attributes obstacleAtt = new Attributes();
+	obstacleAtt.set(ColorAttribute.createDiffuse(col), ColorAttribute.createSpecular(Color.WHITE),
+		AttributeFactory.getPointLightAttribute(pl));
+
+	int posx = Utils.random(0, mapSize - (int) quarterMapSize);
+	int posz = Utils.random(0, mapSize);
+	RaceCourseObject boxModel = this.createObstacle("obstacle", phasename, new Vector3(quarterMapSize, 6, 6),
+		new Vector3(-halfMapSize + posx, 5, index * mapSize + posz), 500f, obstacleAtt);
+	btRigidBody box = boxModel.getBody();
+	box.setCollisionFlags(box.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+	box.setContactCallbackFlag(CollisionDefs.OBJECT_FLAG | CollisionDefs.OBSTACLE_FLAG);
+	box.setContactCallbackFilter(CollisionDefs.PLAYER_FLAG);
+	box.setUserValue(CollisionDefs.generateUserValue());
+	dynamicsWorldRef.addRigidBody(box);
+	return boxModel;
     }
 
     public void addPhase(Phase phase) {
@@ -262,12 +322,9 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     public RaceCourseObject createObstacle(String id, String phaseName, Vector3 dimensions, Vector3 position,
 	    float mass, Attributes attributes) {
 	String materialKey = id + phaseName;
-	Model currentModel = models.get(materialKey);
-	if (currentModel == null) {
-	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z,
-		    Color.GREEN, attributes);
-	    models.put(materialKey, currentModel);
-	}
+	Model currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z,
+		Color.GREEN, attributes);
+
 	return createCourseObjectWithCollisionBody(id, position.x, position.y, position.z, mass, currentModel);
     }
 
