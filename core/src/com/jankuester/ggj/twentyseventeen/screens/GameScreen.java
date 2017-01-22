@@ -12,19 +12,19 @@ import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.g3d.Attributes;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffect;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleEffectLoader;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleSystem;
 import com.badlogic.gdx.graphics.g3d.particles.batches.PointSpriteParticleBatch;
 import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
@@ -56,11 +56,15 @@ import com.jankuester.ggj.twentyseventeen.models.managers.IPhaseUpdateListener;
 import com.jankuester.ggj.twentyseventeen.models.managers.SceneObjectsManager;
 import com.jankuester.ggj.twentyseventeen.models.maps.Phase;
 import com.jankuester.ggj.twentyseventeen.models.maps.RaceCourse;
+import com.jankuester.ggj.twentyseventeen.screens.factories.ScreenComponentFactory;
 import com.jankuester.ggj.twentyseventeen.system.GlobalGameSettings;
 
-public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuListener, ICharacterListener, IPhaseUpdateListener {
+public class GameScreen extends ScreenBase
+	implements InputProcessor, IItemMenuListener, ICharacterListener, IPhaseUpdateListener {
 
     public GameScreen() {
+	screenWidth = Gdx.graphics.getWidth();
+	screenHeight = Gdx.graphics.getHeight();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////
@@ -156,26 +160,48 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     protected int screenHeight = 0;
 
     private PauseScreen pauseScreen;
+    protected boolean screenBuffered = false;
+    protected boolean celShading = false;
+    private Texture screenBuffer;
+    private SpriteBatch spriteBatch;
+    private FrameBuffer fboScreenPause;
+    
+    //STATS TO DISPLAY
+    protected float currentShieldPercent=1f;
+    protected float currentSpeedPercent = 0f;
+    
+    protected long score = 0;
+    protected String scoreStr = "";
 
+    private Color currentPrimaryColor;
+    private Color currentComplemColor;
+    
     private void loadUI() {
+	shapeRenderer = new ShapeRenderer();
+	shapeRenderer.setAutoShapeType(true);
+	spriteBatch = new SpriteBatch();
+	
+	// PAUSE SCREEN UI
 	pauseScreen = new PauseScreen();
 	pauseScreen.setWidth(screenWidth);
 	pauseScreen.setHeight(screenHeight);
 	pauseScreen.create();
+
+	// DEFAULT UI
+	font = ScreenComponentFactory.defaultFont;
+	font.setColor(Color.WHITE);
+	score = 0;
+	
+	currentComplemColor = Phase.getPhaseColor(Phase.TYPE_CLEAR, true);
+	currentPrimaryColor = Phase.getPhaseColor(Phase.TYPE_CLEAR, false);
     }
 
     // --------------------------------------------------------------------------------------------------
     // LOAD GRAPHICS SHADERS AND BUFFERS
     // --------------------------------------------------------------------------------------------------
     private ModelBatch modelBatch;
-    private SpriteBatch spriteBatch;
-    private FrameBuffer fboScreenPause;
     private ShaderProgram toonifyShader;
-
-    protected boolean screenBuffered = false;
-    protected boolean celShading = false;
-
-    private Texture screenBuffer;
+    private ShapeRenderer shapeRenderer;
 
     private ColorShader colorShader;
     private EntityRenderingHelper entityRenderingHelper;
@@ -183,7 +209,6 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private void loadGraphics() {
 	System.out.println("Load Graphics");
 	modelBatch = new ModelBatch();
-	spriteBatch = new SpriteBatch();
 	entityRenderingHelper = new EntityRenderingHelper();
 
 	// FBO RENDERER
@@ -225,8 +250,10 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	sun = ModelFactory.createSun("sun", 0, 5, 0, Color.GOLD, 5);
 
 	environment = new Environment();
-	//environment.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.41f, 0.41f, 0.41f, 1f));
-	//environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f, -0.8f, -0.2f));
+	// environment.set(new ColorAttribute(ColorAttribute.AmbientLight,
+	// 0.41f, 0.41f, 0.41f, 1f));
+	// environment.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -1f,
+	// -0.8f, -0.2f));
 
 	System.out.println("loadEnvironment done");
     }
@@ -240,6 +267,7 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     private Model playerModel;
     public Vector3 playerPos;
     boolean playerHitsGround;
+    boolean playerIsReady = false;
 
     private void loadPlayer() {
 	// playerModel =
@@ -272,7 +300,17 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
     }
 
     public void characterStateChanged(CharacterState cstate) {
-	// System.out.println(cstate.toString());
+	currentShieldPercent = cstate.shield / 100;
+	currentSpeedPercent = cstate.speed;
+	System.out.println(currentSpeedPercent);
+    }
+    
+    public void characterReady(boolean readiness){
+	playerIsReady = readiness;
+	if (playerIsReady){
+	    musicBg.play();
+	    //play 3 2 1 go
+	}
     }
 
     // --------------------------------------------------------------------------------------------------
@@ -318,15 +356,26 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	}
 	System.out.println("loadMap done");
     }
-    
-    public void phaseCreated(Phase phase, int phaseType, String phaseName, int index){
+
+    public void phaseCreated(Phase phase, int phaseType, String phaseName, int index) {
 	sceneObjects.createPhase(phase, phaseType, phaseName, index);
+    }
+
+    public void phaseStarted(int index, int phaseType) {
+	score += index * 10 - index * 3;
+	String tmp = Long.toString(score);
+	while (tmp.length() < 18) {
+	    tmp = "0" + tmp;
+	}
+	scoreStr = tmp;
+	currentComplemColor = Phase.getPhaseColor(phaseType, true);
+	currentPrimaryColor = Phase.getPhaseColor(phaseType, false);
     }
 
     public void phaseDisposed(Phase phase) {
 	sceneObjects.disposePhase(phase);
     }
-    
+
     // --------------------------------------------------------------------------------------------------
     // CREATE BULLET AND DYNAMICS WORLD
     // --------------------------------------------------------------------------------------------------
@@ -405,7 +454,6 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	musicBg = Gdx.audio.newMusic(Gdx.files.internal("audio/maps/city_map_bg.mp3"));
 	musicBg.setVolume(GlobalGameSettings.loudeness_music);
 	musicBg.setLooping(true);
-	musicBg.play();
 	System.out.println("loadSounds done");
     }
 
@@ -470,7 +518,12 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	}
     }
 
+    
     private void renderScene(Shader shader) {
+	spriteBatch.begin();
+	if (backgroundImage != null)
+	    spriteBatch.draw(backgroundImage, 0, 0, screenWidth, screenHeight);
+	spriteBatch.end();
 
 	entityRenderingHelper.begin(player.camera, modelBatch);
 	entityRenderingHelper.render(raceCourse.getRenderingInstances(), environment, shader);
@@ -484,6 +537,24 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	    dynamicsWorld.debugDrawWorld();
 	    debugDrawer.end();
 	}
+
+	int barHeight = screenHeight -40;
+	shapeRenderer.begin();
+	//CONTENT
+	shapeRenderer.set(ShapeType.Filled);
+	shapeRenderer.rect(20, 20, 20 , barHeight*currentShieldPercent, currentComplemColor, currentComplemColor, currentPrimaryColor, currentPrimaryColor);
+	shapeRenderer.rect(screenWidth - 40, 20, 20 , barHeight*currentSpeedPercent, currentComplemColor, currentComplemColor, currentPrimaryColor, currentPrimaryColor);
+	
+	
+	//BORDERS
+	shapeRenderer.set(ShapeType.Line);
+	shapeRenderer.rect(20, 20, 20 , barHeight, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE);
+	shapeRenderer.rect(screenWidth - 40, 20, 20 , barHeight, Color.WHITE, Color.WHITE, Color.WHITE, Color.WHITE);
+	shapeRenderer.end();
+	
+	spriteBatch.begin();
+	font.draw(spriteBatch, scoreStr, screenWidth / 2 - 90, 50);
+	spriteBatch.end();
     }
 
     @Override
@@ -567,11 +638,11 @@ public class GameScreen extends ScreenBase implements InputProcessor, IItemMenuL
 	    }
 
 	    if (callbackid == (CollisionDefs.WALL_LEFT | CollisionDefs.GROUND_FLAG)) {
-		player.addForce(new Vector3(1, 0, 0), 40);
+		player.addForce(new Vector3(1, 0, 0), 20);
 	    }
 
 	    if (callbackid == (CollisionDefs.WALL_RIGHT | CollisionDefs.GROUND_FLAG)) {
-		player.addForce(new Vector3(-1, 0, 0), 40);
+		player.addForce(new Vector3(-1, 0, 0), 20);
 	    }
 
 	    if (callbackid == CollisionDefs.GROUND_FLAG) {

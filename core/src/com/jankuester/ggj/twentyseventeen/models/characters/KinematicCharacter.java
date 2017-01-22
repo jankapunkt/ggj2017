@@ -16,6 +16,7 @@ import com.badlogic.gdx.graphics.g3d.Shader;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.bullet.Bullet;
+import com.badlogic.gdx.physics.bullet.collision.btBoxShape;
 import com.badlogic.gdx.physics.bullet.collision.btBvhTriangleMeshShape;
 import com.badlogic.gdx.physics.bullet.collision.btCapsuleShape;
 import com.badlogic.gdx.physics.bullet.collision.btCollisionObject;
@@ -27,6 +28,7 @@ import com.badlogic.gdx.physics.bullet.collision.btPairCachingGhostObject;
 import com.badlogic.gdx.physics.bullet.collision.btShapeHull;
 import com.badlogic.gdx.physics.bullet.collision.btSphereShape;
 import com.badlogic.gdx.physics.bullet.dynamics.btKinematicCharacterController;
+import com.badlogic.gdx.physics.bullet.softbody.btSoftBody.CJoint;
 import com.badlogic.gdx.utils.Disposable;
 import com.jankuester.ggj.twentyseventeen.bullet.CollisionDefs;
 import com.jankuester.ggj.twentyseventeen.bullet.ICollisionTarget;
@@ -90,52 +92,40 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	transform.rotate(Vector3.Y, 180);
 
 	// init capsule shape
-	playerColShape = new btSphereShape(0.5f);
+	// playerColShape = new btSphereShape(0.5f);
+	playerColShape = new btBoxShape(new Vector3(0.5f, 0.5f, 0.5f));
 	// playerColShape = new btCapsuleShape(0.5f, 2f); //for less computation
 	playerColShape.calculateLocalInertia(mass, localInertia);
-	
+
 	// ------------------------------------
 	// init ghost object
 	// this is the invisible
 	// collision object
 	ghost = new btPairCachingGhostObject();
 	ghost.setWorldTransform(this.transform);
-	
+
 	ghost.setUserValue(10101010);
 	ghost.setCollisionShape(playerColShape);
 
-	ghost.setCollisionFlags(ghost.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
-	ghost.setContactCallbackFilter(
-		CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG | CollisionDefs.GROUND_FLAG
+	ghost.setCollisionFlags(
+		ghost.getCollisionFlags() | btCollisionObject.CollisionFlags.CF_CUSTOM_MATERIAL_CALLBACK);
+	ghost.setContactCallbackFilter(CollisionDefs.OBJECT_FLAG | CollisionDefs.WEAPON_FLAG | CollisionDefs.GROUND_FLAG
 		| CollisionDefs.WALL_LEFT | CollisionDefs.WALL_RIGHT | CollisionDefs.ALL_FLAG);
 	ghost.setContactCallbackFlag(CollisionDefs.PLAYER_FLAG);
 
 	ghost.setFriction(0);
-	
-	
+
 	// ------------------------------------
 	// init char control
 	// this is the controller
 	// for transform and stuff
 	charControl = new btKinematicCharacterController(ghost, playerColShape, .00001f);
 	charControl.setUseGhostSweepTest(false);
-	
-	charControl.setUp(Vector3.Y);//setUpAxis(1); // y-UP
-	charControl.setMaxJumpHeight(5.5f);
-	charControl.setJumpSpeed(20);
 
-	// sound shot
-	sounds = new HashMap<String, Sound>();
-	// sounds.put("walk",
-	// Gdx.audio.newSound(Gdx.files.internal("audio/walk.mp3")));
-	// sounds.put("jump",
-	// Gdx.audio.newSound(Gdx.files.internal("audio/jump.mp3")));
-
-	// TODO this must be put into Weapon class
-	// sounds.put("shot1",
-	// Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_shot.mp3")));
-	// sounds.put("empty",
-	// Gdx.audio.newSound(Gdx.files.internal("audio/item_gun_empty.mp3")));
+	charControl.setUp(Vector3.Y);// setUpAxis(1); // y-UP
+	charControl.setMaxJumpHeight(0);
+	charControl.setJumpSpeed(0);
+	charControl.setStepHeight(0.25f);
 
 	this.userData = new Color(position.x, position.y, position.z, 1f);
     }
@@ -148,34 +138,37 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     //
     // =====================================================================================================//
 
-    private float maxVelocity= 1;
-    private float agility =1;
-    
-    public void setVehicleAgility(int value){
-	agility=value/100;
+    private float maxVelocity = 7;
+    private float agility = 1;
+
+    public void setVehicleAgility(int value) {
+	agility = value / 100;
     }
-    
-    public void setVehicleSpeed(int value){
-	maxVelocity = value/100;
+
+    public void setVehicleSpeed(int value) {
+	maxVelocity = value / 100;
     }
-    
-   
-    private int maxShield=1;
-    
-    public void setShield(int value){
-	currentShield = maxShield = value; 
+
+    private int maxShield = 1;
+
+    public void setShield(int value) {
+	currentShield = maxShield = value;
     }
-    
-    private int currentShield=0;
-    
-    public float getShield(){
-	return currentShield/maxShield*100;
+
+    private float currentShield = 1f;
+
+    private boolean camFixed;
+
+    public float getShield() {
+	System.out.println("current shield: " + currentShield);
+	return currentShield / maxShield * 100;
     }
-    
-    public float getSpeed(){
-	return this.velocity.z * 50;
+
+    public float getSpeed() {
+	System.out.println(velocity.z);
+	return this.velocity.z / maxVelocity;
     }
-    
+
     // =====================================================================================================//
     //
     //
@@ -184,7 +177,6 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     //
     // =====================================================================================================//
 
-    
     public boolean isCollisionTarget(btCollisionObject toCompare) {
 	return toCompare != null && toCompare.equals(ghost);
     }
@@ -196,6 +188,10 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
      *            delta time
      */
     public void update(float delta) {
+	if (!this.camFixed) {
+	    fixCam(delta);
+	}
+
 	updateMotion(delta);
 	updateCamera();
     }
@@ -274,8 +270,8 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 
 	if (currentCameraMode == CAMERA_MODE_FIRST) {
 	    camera.position.set(this.position.x, this.position.y, this.position.z);
-	    camera.position.rotate(Vector3.Y, -45);
 	    camera.lookAt(Vector3.Z);
+	    camera.position.rotate(Vector3.Y, 180);
 	}
 	if (currentCameraMode == CAMERA_MODE_THIRD) {
 	    camera.position.set(this.position.x, this.position.y + 2, this.position.z);
@@ -285,18 +281,14 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	camera.near = 0.1f;
 	camera.far = 400f;
     }
-    
-    
-    public void initialRotate(float delta) {
-	
-    }
 
     public void switchCameraMode() {
 	if (currentCameraMode == CAMERA_MODE_FIRST)
 	    currentCameraMode = CAMERA_MODE_THIRD;
 	else if (currentCameraMode == CAMERA_MODE_THIRD)
 	    currentCameraMode = CAMERA_MODE_FIRST;
-//	System.out.println("[player]: switched camera to " + currentCameraMode);
+	// System.out.println("[player]: switched camera to " +
+	// currentCameraMode);
     }
 
     /**
@@ -320,16 +312,33 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	if (currentCameraMode == CAMERA_MODE_FIRST) {
 	    camera.rotateAround(camera.position, right, angley);
 	    camera.rotate(Vector3.Y, anglex);
-	    rotateCharacter(anglex, angley, delta);
+	    // rotateCharacter(anglex, angley, delta);
 	}
 	if (currentCameraMode == CAMERA_MODE_THIRD) {
 	    angleAroundPlayer += anglex;
 	    camera.rotateAround(camera.position, right, angley);
 	    camera.rotate(Vector3.Y, anglex);
-	    rotateCharacter(anglex, angley, delta);
+	    // rotateCharacter(anglex, angley, delta);
 	}
 
     }
+
+    private float deviation = 0.001f;
+
+    private void fixCam(float delta) {
+	System.out.println(camera.direction);
+	Vector3 target = Vector3.Z;
+	float camDirZ = camera.direction.z;
+	float angle = (target.z - camDirZ)*180;
+	if (camDirZ < target.z - deviation || camDirZ > target.z + deviation)
+	    rotateCamera(angle, 0, delta);
+	else{
+	    this.camFixed = true;
+	    notifyCamReady();
+	}
+    }
+
+
 
     /**
      * Updates the ghost's world transform and syncs camera position with
@@ -349,7 +358,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 		    -MathUtils.sin(MathUtils.degreesToRadians * angleAroundPlayer) * dist, 2,
 		    -MathUtils.cos(MathUtils.degreesToRadians * angleAroundPlayer) * dist));
 	}
-	
+
 	position.set(transform.getTranslation(position));
 	camera.update();
 
@@ -363,7 +372,7 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     //
     // =====================================================================================================//
     public final Vector3 velocity = new Vector3();
-    
+
     /** translation vector **/
     public final Vector3 transl = new Vector3();
 
@@ -384,12 +393,14 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	this.transform.rotate(Vector3.Y, anglex);
 	this.ghost.setWorldTransform(transform);
     }
-    
+
     boolean impulse = false;
+
     public void addForce(Vector3 forceDir, float strength) {
 	impulse = true;
 	strength = strength / 1 * velocity.z;
 	charControl.applyImpulse(forceDir.nor().scl(strength));
+	this.currentShield -= strength / 500;
 	impulse = false;
     }
 
@@ -403,8 +414,9 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
      *            delta time
      */
     protected void updateMotion(float delta) {
-	if (impulse)return;
-	
+	if (impulse || !camFixed)
+	    return;
+
 	isMoving = forwardMove || backMove || leftMove || rightMove;
 
 	// skip unwanted
@@ -451,23 +463,25 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
 	if (isMoving) // finally apply
 	{
 
-	   if (leftMove || rightMove)
-		transl.limit(0.1f);
+	    if (leftMove || rightMove)
+		transl.limit(0.05f);
 	    else
-		transl.limit(0.005f);
-	    
+		transl.limit(0.01f);
+
 	    velocity.add(transl);
 	    if (shiftDown)
 		velocity.limit2(0.5f);
 	    else
-		velocity.limit2(5);
+		velocity.limit(maxVelocity);
 	    charControl.setWalkDirection(velocity);
-	   // charControl.setLinearVelocity(velocity.add(transl));
+	    // charControl.setLinearVelocity(velocity.add(transl));
+	    if (Math.round(velocity.z) != lastCharSpeed)
+		notifyListeners();
 	} else {
-	    //charControl.setWalkDirection(Vector3.Zero);
-	    // stopSound(SOUNDS_WALK);
 	}
     }
+
+    private int lastCharSpeed = 0;
 
     // =====================================================================================================//
     //
@@ -635,16 +649,18 @@ public class KinematicCharacter extends GameModelInstance implements Disposable,
     //
     //
     // =====================================================================================================//
-    private List<ICharacterListener> listeners = new ArrayList<ICharacterListener>();
+    private ICharacterListener listener;
 
     public void addListener(ICharacterListener listener) {
-	listeners.add(listener);
+	this.listener = listener;
     }
 
     public void notifyListeners() {
-	for (ICharacterListener listener : listeners) {
-	    listener.characterStateChanged(getCharacterState());
-	}
+	listener.characterStateChanged(getCharacterState());
+    }
+    
+    private void notifyCamReady() {
+	listener.characterReady(true);
     }
 
     public CharacterState getCharacterState() {

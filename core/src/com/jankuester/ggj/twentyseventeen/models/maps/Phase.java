@@ -46,9 +46,11 @@ public class Phase {
     public HashMap<String, SceneObject> sceneObjects = new HashMap<String, SceneObject>(32);
 
     public int phaseId;
+    public int phaseType;
 
-    public Phase(int phaseIndex) {
+    public Phase(int phaseIndex, int phaseType) {
 	this.phaseId = phaseIndex;
+	this.phaseType = phaseType;
     }
 
     public void removeAll() {

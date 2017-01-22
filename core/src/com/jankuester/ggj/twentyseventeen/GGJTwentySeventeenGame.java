@@ -9,6 +9,7 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.utils.Disposable;
@@ -134,15 +135,17 @@ public class GGJTwentySeventeenGame extends Game {
 	
 	GameScreen gameScreen = new GameScreen();
 	gameScreen.addInputListener(menuListener);
-
+	Texture background = new Texture(Gdx.files.internal("images/sky.jpg"));
+	gameScreen.setBackgroundImage(background, false);
 	// get selection from the other screens
+	/**
 	gameScreen.setMapId(previewMapScreen.getCurrentPreview().getId());
 	gameScreen.setVehicleId(previewMapScreen.getCurrentPreview().getId());
 	gameScreen.setMapDifficulty(previewMapScreen.getCurrentPreview().getDifficulty());
 	gameScreen.setVehicleAgility(previewVehicleScreen.getCurrentPreview().getAgility());
 	gameScreen.setVehicleSpeed(previewVehicleScreen.getCurrentPreview().getSpeed());
 	gameScreen.setVehicleShield(previewVehicleScreen.getCurrentPreview().getShield());
-	
+	**/
 	queueScreen(gameScreen);
 	unloadMenuScreens();
     }

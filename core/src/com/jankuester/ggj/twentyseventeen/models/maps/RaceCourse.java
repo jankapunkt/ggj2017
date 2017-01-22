@@ -32,7 +32,7 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     private int currentPlayerPhase = 0;
     private int instanceCount = 0;
     private int phaseCount = 0;
-    private int currentPhaseType;
+    private int nextPhaseType;
 
     private final btDynamicsWorld dynamicsWorldRef;
 
@@ -63,22 +63,25 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
     public void update(Vector3 playerPos, float playerSpeed) {
 	int z_rounded = Math.abs(Math.round(playerPos.z / mapSize));
 	if (z_rounded != currentPlayerPhase) {
-	    // System.out.println("phase: " + z_rounded + " "+
-	    // phaseQueue.first().phaseId);
 	    currentPlayerPhase = z_rounded;
-	    if (phaseQueue.size > 0 && z_rounded > phaseQueue.first().phaseId + 1) {
-		disposePhase(phaseQueue.removeFirst());
+	    if (phaseQueue.size > 0) {
+		Phase currentPhase = phaseQueue.first();
+		if (z_rounded == currentPhase.phaseId);
+		    notifyPhaseUpdate(z_rounded, currentPhase.phaseType);
+		if(z_rounded > currentPhase.phaseId + 1)
+		    disposePhase(phaseQueue.removeFirst());
 	    }
 
 	    if (z_rounded % 10 == 0) {
-		currentPhaseType = Utils.random(0, 3);
+		nextPhaseType = Utils.random(0, 3);
 	    }
-	    createPhase(phaseCount, currentPhaseType);
+	    createPhase(phaseCount, nextPhaseType);
+
 	}
     }
 
     public void createPhase(int index, int phaseType) {
-	Phase phase = new Phase(this.getPhaseCount());
+	Phase phase = new Phase(this.getPhaseCount(), phaseType);
 	String phasename = Phase.getPhasename(phaseType);
 
 	System.out.println("create phase: " + index + " => " + phaseType + " => " + phasename);
@@ -87,8 +90,8 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	phaseColor.a = 0.5f;
 	PointLight pl = ModelFactory.createPointLight(0, 52, index * mapSize, Color.WHITE, 8000f);
 	Attributes attributes = new Attributes();
-	attributes.set(ColorAttribute.createDiffuse(phaseColor), 
-		ColorAttribute.createSpecular(Color.WHITE), AttributeFactory.getPointLightAttribute(pl));
+	attributes.set(ColorAttribute.createDiffuse(phaseColor), ColorAttribute.createSpecular(Color.WHITE),
+		AttributeFactory.getPointLightAttribute(pl));
 
 	RaceCourseObject groundModel = this.createTerrain("ground", phasename, new Vector3(mapSize, 1f, mapSize),
 		new Vector3(0, 0, index * mapSize), MaterialFactory.createMaterial(phasename, attributes));
@@ -104,7 +107,8 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	// WALL LEFT
 
 	RaceCourseObject wallLeftModel = this.createTerrain("wall_left", phasename, wallSize,
-		new Vector3(-mapSize / 2 - 1, 0, index * mapSize), MaterialFactory.createMaterial(phasename, attributes));
+		new Vector3(-mapSize / 2 - 1, 0, index * mapSize),
+		MaterialFactory.createMaterial(phasename, attributes));
 	btRigidBody wallLeftBody = wallLeftModel.getBody();
 	wallLeftBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_LEFT);
 	wallLeftBody.setContactCallbackFilter(0);
@@ -114,7 +118,8 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 	// WALL RIGHT
 
 	RaceCourseObject wallRightModel = this.createTerrain("wallRight", phasename, wallSize,
-		new Vector3(mapSize / 2 + 1, 0, index * mapSize), MaterialFactory.createMaterial(phasename, attributes));
+		new Vector3(mapSize / 2 + 1, 0, index * mapSize),
+		MaterialFactory.createMaterial(phasename, attributes));
 	btRigidBody wallRightBody = wallRightModel.getBody();
 	wallRightBody.setContactCallbackFlag(CollisionDefs.GROUND_FLAG | CollisionDefs.WALL_RIGHT);
 	wallRightBody.setContactCallbackFilter(0);
@@ -161,6 +166,10 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
     private void notifyPhaseCreated(Phase phase, int phaseType, String phasename, int index) {
 	listener.phaseCreated(phase, phaseType, phasename, index);
+    }
+
+    private void notifyPhaseUpdate(int z_rounded, int phaseType) {
+	listener.phaseStarted(z_rounded, phaseType);
     }
 
     private void notifyPhaseDispose(Phase phase) {
@@ -228,14 +237,13 @@ public class RaceCourse extends BaseModelInstanceManager implements IModelInstan
 
     public RaceCourseObject createTerrain(String id, String phaseName, Vector3 dimensions, Vector3 pos, Material mat) {
 	String materialKey = id + phaseName;
-	/*Model currentModel = models.get(materialKey);
-	if (currentModel == null) {
-	    System.out.println("new terrain model => " + materialKey);
-	    currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
-	    if (currentModel == null)
-		throw new Error();
-	    models.put(materialKey, currentModel);
-	}*/
+	/*
+	 * Model currentModel = models.get(materialKey); if (currentModel ==
+	 * null) { System.out.println("new terrain model => " + materialKey);
+	 * currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x,
+	 * dimensions.y, dimensions.z, mat); if (currentModel == null) throw new
+	 * Error(); models.put(materialKey, currentModel); }
+	 */
 	Model currentModel = ModelFactory.createBoxModel(materialKey, dimensions.x, dimensions.y, dimensions.z, mat);
 	return createTerrainWithCollisionBody(currentModel, id, pos);
     }

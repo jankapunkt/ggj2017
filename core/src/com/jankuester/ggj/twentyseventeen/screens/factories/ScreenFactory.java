@@ -33,7 +33,9 @@ public class ScreenFactory {
 	startScreen.addInputListener(menuListener);
 
 	startScreen.addButton(
-		ScreenComponentFactory.createMenuButton(ScreenMenuActions.PREVIEW_MAPS, "ARCADE MODE", 300, 200, 0, 0));
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.GAME, "ARCADE MODE", 300, 200, 0, 0));
+	startScreen.addButton(
+		ScreenComponentFactory.createMenuButton(ScreenMenuActions.GAME, "SIMULATION MODE", 300, 200, 0, 0));
 	startScreen.addButton(
 		ScreenComponentFactory.createMenuButton(ScreenMenuActions.OPTIONS, "OPTIONS", 300, 200, 0, 0));
 	startScreen.addButton(ScreenComponentFactory.createMenuButton(ScreenMenuActions.EXIT, "EXIT", 300, 200, 0, 0));
